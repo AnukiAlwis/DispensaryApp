@@ -87,4 +87,11 @@ public class QueueController {
         List<QueueResponseDto> list = queueService.getDoctorQueue(tenantId, UUID.fromString(doctorId));
         return ResponseEntity.ok(list);
     }
+
+    @GetMapping("/search")
+    public ResponseEntity<List<QueueResponseDto>> searchQueueByPatient(@RequestParam String searchTerm) {
+        UUID tenantId = UUID.fromString(TenantContext.getTenantId());
+        List<QueueResponseDto> list = queueService.searchQueueByPatientNameOrPhone(tenantId, java.time.LocalDate.now(), searchTerm);
+        return ResponseEntity.ok(list);
+    }
 }

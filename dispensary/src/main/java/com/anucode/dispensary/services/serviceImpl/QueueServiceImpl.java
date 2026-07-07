@@ -155,4 +155,12 @@ public class QueueServiceImpl implements QueueService {
                 .map(this::mapToDto)
                 .collect(Collectors.toList());
     }
+
+    @Override
+    public List<QueueResponseDto> searchQueueByPatientNameOrPhone(UUID tenantId, LocalDate queueDate, String searchTerm) {
+        return queueRepository.searchByPatientNameOrPhone(tenantId, queueDate, searchTerm)
+                .stream()
+                .map(this::mapToDto)
+                .collect(Collectors.toList());
+    }
 }

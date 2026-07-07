@@ -3,6 +3,7 @@ package com.anucode.dispensary.services;
 import com.anucode.dispensary.dtos.QueueCreateDto;
 import com.anucode.dispensary.dtos.QueueResponseDto;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
@@ -21,4 +22,6 @@ public interface QueueService {
     QueueResponseDto remove(UUID tenantId, UUID currentUserId, UUID queueId);
 
     List<QueueResponseDto> getDoctorQueue(UUID tenantId, UUID doctorId);
+
+    List<QueueResponseDto> searchQueueByPatientNameOrPhone(UUID tenantId, LocalDate queueDate, String searchTerm);
 }
