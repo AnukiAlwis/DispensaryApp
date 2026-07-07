@@ -43,6 +43,8 @@ export default function DistributorPage() {
         justifyContent="space-between"
         alignItems="center"
         mb={2}
+        flexWrap="wrap"
+        gap={2}
       >
         <Typography variant="h5">Distributor Management</Typography>
         <Button variant="contained" onClick={() => setIsModalOpen(true)}>

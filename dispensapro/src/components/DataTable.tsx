@@ -11,6 +11,7 @@ import {
   Button,
   Tooltip,
   Stack,
+  Box,
 } from "@mui/material";
 import { ReactNode, useState, ElementType } from "react";
 import EditIcon from "@mui/icons-material/Edit";
@@ -68,8 +69,9 @@ export default function DataTable({
   const showActionsColumn = onEdit || onDelete || customActions.length > 0;
 
   return (
-    <TableContainer component={Paper}>
-      <Table>
+    <Box sx={{ overflowX: 'auto' }}>
+      <TableContainer component={Paper}>
+        <Table>
         <TableHead>
           <TableRow>
             {columns.map((col) => (
@@ -150,5 +152,6 @@ export default function DataTable({
         </TableBody>
       </Table>
     </TableContainer>
+    </Box>
   );
 }

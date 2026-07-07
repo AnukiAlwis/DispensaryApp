@@ -11,7 +11,7 @@ export default function AppLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
   return (
-    <Box display="flex" minHeight="100vh">
+    <Box display="flex" minHeight="100vh" sx={{ overflowX: "hidden" }}>
       {/* Sidebar: permanent on desktop/tablet, temporary on mobile */}
       <Sidebar
         isMobile={isMobile}
@@ -20,7 +20,7 @@ export default function AppLayout() {
       />
 
       {/* Main content area */}
-      <Box flexGrow={1} display="flex" flexDirection="column">
+      <Box flexGrow={1} minWidth={0} display="flex" flexDirection="column">
         {/* TopBar */}
         <TopBar
           isMobile={isMobile}
@@ -31,6 +31,7 @@ export default function AppLayout() {
         <Box
           component="main"
           flexGrow={1}
+          minWidth={0}
           p={{ xs: 1, sm: 2, md: 3 }}
           bgcolor="#f9f9f9"
         >

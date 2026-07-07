@@ -4,6 +4,8 @@ import {
   DialogContent,
   DialogActions,
   Button,
+  useTheme,
+  useMediaQuery,
 } from "@mui/material";
 import { ReactNode } from "react";
 
@@ -22,8 +24,17 @@ export default function DialogModal({
   onSave,
   children,
 }: DialogModalProps) {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+
   return (
-    <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
+    <Dialog
+      open={open}
+      onClose={onClose}
+      fullWidth
+      maxWidth={isMobile ? "xs" : "sm"}
+      fullScreen={isMobile}
+    >
       <DialogTitle>{title}</DialogTitle>
       <DialogContent>{children}</DialogContent>
       <DialogActions>
