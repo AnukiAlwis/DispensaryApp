@@ -67,7 +67,9 @@ public class PatientServiceImpl implements PatientService {
         if (!patient.getTenant().getId().equals(tenantId)) {
             throw new TenantMismatchException("Tenant mismatch");
         }
-        return modelMapper.map(patient, PatientResponseDto.class);
+        PatientResponseDto dto = modelMapper.map(patient, PatientResponseDto.class);
+        dto.setAge(PatientAgeCalculator.calculateAge(patient.getDob()).toString());
+        return dto;
     }
 
     @Override
