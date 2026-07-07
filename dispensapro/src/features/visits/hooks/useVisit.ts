@@ -16,9 +16,7 @@ interface UseCreateVisitResult {
 // Hook 1: useCreateVisit
 // ---------------------------
 
-export const useCreateVisit = (
-  onSuccess?: () => void
-): UseCreateVisitResult => {
+export const useCreateVisit = (): UseCreateVisitResult => {
   const [isCreating, setIsCreating] = useState(false);
   const [error, setError] = useState<Error | null>(null);
   const [visits, setVisits] = useState<VisitResponseDto[]>([]);
@@ -31,13 +29,12 @@ export const useCreateVisit = (
     const dataToSend = {
       patientId,
       doctorId,
-      visitTime: new Date().toISOString(), 
+      visitTime: new Date().toISOString(),
       status: 'OPEN' as const,
     };
 
     try {
       await visitService.create(dataToSend);
-      onSuccess?.();
     } catch (err: any) {
       console.error("Visit creation failed:", err);
       setError(err);

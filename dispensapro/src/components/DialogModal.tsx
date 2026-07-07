@@ -15,6 +15,7 @@ interface DialogModalProps {
   onClose: () => void;
   onSave?: () => void;
   children: ReactNode;
+  cancelText?: string;
 }
 
 export default function DialogModal({
@@ -23,6 +24,7 @@ export default function DialogModal({
   onClose,
   onSave,
   children,
+  cancelText = "Cancel",
 }: DialogModalProps) {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
@@ -38,7 +40,7 @@ export default function DialogModal({
       <DialogTitle>{title}</DialogTitle>
       <DialogContent>{children}</DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>Cancel</Button>
+        <Button onClick={onClose}>{cancelText}</Button>
         {onSave && <Button onClick={onSave}>Save</Button>}
       </DialogActions>
     </Dialog>

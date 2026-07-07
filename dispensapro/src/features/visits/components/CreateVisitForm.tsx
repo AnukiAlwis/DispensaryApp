@@ -11,6 +11,7 @@ import { Patient } from "../../patients/types";
 import { useDoctors } from "../../users/hooks/useDoctors";
 import { useCreateVisit } from "../hooks/useVisit";
 import { useQueue } from "../../Queues/hooks/useQueue";
+import { Queue } from "../../Queues/types";
 
 interface VisitFormValues {
   doctorId: string;
@@ -18,7 +19,7 @@ interface VisitFormValues {
 
 interface CreateVisitFormProps {
   patient: Patient | null;
-  onClose: () => void;
+  onClose: (queue?: Queue) => void;
   onSubmit?: (patientId: string, values: VisitFormValues) => void;
 }
 
@@ -30,7 +31,7 @@ export default function CreateVisitForm({
   const { doctors, loading: loadingDoctors } = useDoctors();
 
   const { addQueue } = useQueue();
-  const { isCreating, createVisit } = useCreateVisit(onClose);
+  const { isCreating, createVisit } = useCreateVisit();
 
   const [form, setForm] = useState<VisitFormValues>({
     doctorId: "",
@@ -41,10 +42,11 @@ export default function CreateVisitForm({
       setForm({ ...form, [field]: e.target.value });
     };
 
-  const handleCreate = () => {
+  const handleCreate = async () => {
     if (!patient?.id || !isFormValid || isCreating) return;
-    addQueue({ patientId: patient.id, doctorId: form.doctorId });
-    createVisit({ patientId: patient.id, doctorId: form.doctorId });
+    const queue = await addQueue({ patientId: patient.id, doctorId: form.doctorId });
+    await createVisit({ patientId: patient.id, doctorId: form.doctorId });
+    onClose(queue);
   };
 
   const isFormValid = !!form.doctorId;
@@ -142,7 +144,7 @@ export default function CreateVisitForm({
 
       {/* Action Buttons */}
       <Box display="flex" justifyContent="flex-end" gap={1} mt={2}>
-        <Button variant="outlined" onClick={onClose} disabled={isCreating}>
+        <Button variant="outlined" onClick={() => onClose()} disabled={isCreating}>
           CANCEL
         </Button>
         <Button

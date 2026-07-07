@@ -11,6 +11,8 @@ import CreateVisitForm from "../components/CreateVisitForm";
 import { usePatients } from "../../patients/hooks/usePatients";
 import CheckInIcon from "@mui/icons-material/FrontHand";
 import { useQueue } from "../../Queues/hooks/useQueue";
+import QueueCard from "../../Queues/components/QueueCard";
+import { Queue } from "../../Queues/types";
 
 export default function VisitsPage() {
   const { queues, addQueue } = useQueue();
@@ -24,6 +26,7 @@ export default function VisitsPage() {
   const [oldVisits, setOldVisits] = useState<any[]>([]);
 
   const [openVisitModal, setOpenVisitModal] = useState(false);
+  const [createdQueue, setCreatedQueue] = useState<Queue | null>(null);
 
   useEffect(() => {
     if (patientId) {
@@ -197,9 +200,23 @@ export default function VisitsPage() {
         {/* Placeholder for the Create Visit Form component */}
         <CreateVisitForm
           patient={selectedPatient}
-          onClose={() => setOpenVisitModal(false)}
+          onClose={(queue) => {
+            setOpenVisitModal(false);
+            setCreatedQueue(queue || null);
+          }}
         />
       </DialogModal>
+
+      {createdQueue && (
+        <DialogModal
+          open={!!createdQueue}
+          title={"Queue Number " + createdQueue.queueNumber + " Assigned"}
+          onClose={() => setCreatedQueue(null)}
+          cancelText="CLOSE"
+        >
+          <QueueCard queue={createdQueue} />
+        </DialogModal>
+      )}
     </Box>
   );
 }
