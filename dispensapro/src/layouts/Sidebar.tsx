@@ -18,6 +18,7 @@ import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { Link, useLocation } from "react-router-dom";
 import { useState } from "react";
+import CheckInDialog from "../features/visits/components/CheckInDialog";
 import "./Sidebar.css";
 
 const drawerWidth = 260;
@@ -31,6 +32,7 @@ interface SidebarProps {
 export default function Sidebar({ isMobile, open, onToggle }: SidebarProps) {
   const location = useLocation();
   const [openPharmacy, setOpenPharmacy] = useState(false);
+  const [checkInOpen, setCheckInOpen] = useState(false);
   const handleTogglePharmacy = () => setOpenPharmacy((prev) => !prev);
 
   const navLinks = [
@@ -200,6 +202,7 @@ export default function Sidebar({ isMobile, open, onToggle }: SidebarProps) {
           sx={{
             my: 0.8,
           }}
+          onClick={() => setCheckInOpen(true)}
         >
           Check-In
         </Button>
@@ -207,6 +210,8 @@ export default function Sidebar({ isMobile, open, onToggle }: SidebarProps) {
           Book Appointment
         </Button>
       </Box>
+
+      <CheckInDialog open={checkInOpen} onClose={() => setCheckInOpen(false)} />
     </Box>
   );
 

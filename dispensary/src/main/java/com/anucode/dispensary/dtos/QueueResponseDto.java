@@ -11,6 +11,7 @@ public class QueueResponseDto {
     private UUID patientId;
     private UUID doctorId;
     private String patientName;
+    private String patientContact;
     private String doctorName;
     private String status;
     private Integer queueNumber;

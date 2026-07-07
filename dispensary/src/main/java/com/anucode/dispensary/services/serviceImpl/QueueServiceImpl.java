@@ -82,6 +82,7 @@ public class QueueServiceImpl implements QueueService {
         dto.setPatientId(entry.getPatient().getId());
         dto.setDoctorId(entry.getDoctor().getId());
         dto.setPatientName(entry.getPatient().getFirstName() + " " + entry.getPatient().getLastName());
+        dto.setPatientContact(entry.getPatient().getContact());
         dto.setDoctorName(entry.getDoctor().getFullName());
         dto.setStatus(entry.getStatus().name());
         dto.setQueueNumber(entry.getQueueNumber());
