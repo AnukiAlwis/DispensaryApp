@@ -18,6 +18,12 @@ public class TenantFilter extends HttpFilter {
     protected void doFilter(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
             throws IOException, ServletException {
 
+        String path = request.getRequestURI();
+        if (path.startsWith("/h2-console") || path.startsWith("/error")) {
+            chain.doFilter(request, response);
+            return;
+        }
+
         String tenantId = request.getHeader("X-Tenant-ID");
 
         if (tenantId == null || tenantId.isEmpty()) {
