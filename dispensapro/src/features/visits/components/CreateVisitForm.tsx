@@ -5,6 +5,8 @@ import {
   Button,
   Typography,
   CircularProgress,
+  Grid,
+  Alert,
 } from "@mui/material";
 import { useState } from "react";
 import { Patient } from "../../patients/types";
@@ -26,27 +28,37 @@ interface CreateVisitFormProps {
 export default function CreateVisitForm({
   patient,
   onClose,
-  onSubmit = () => {},
 }: CreateVisitFormProps) {
   const { doctors, loading: loadingDoctors } = useDoctors();
-
   const { addQueue } = useQueue();
   const { isCreating, createVisit } = useCreateVisit();
 
   const [form, setForm] = useState<VisitFormValues>({
     doctorId: "",
   });
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   const handleChange =
     (field: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement>) => {
       setForm({ ...form, [field]: e.target.value });
+      setSubmitError(null);
     };
 
   const handleCreate = async () => {
     if (!patient?.id || !isFormValid || isCreating) return;
-    const queue = await addQueue({ patientId: patient.id, doctorId: form.doctorId });
-    await createVisit({ patientId: patient.id, doctorId: form.doctorId });
-    onClose(queue);
+    setSubmitError(null);
+    try {
+      const queue = await addQueue({ patientId: patient.id, doctorId: form.doctorId });
+      await createVisit({ patientId: patient.id, doctorId: form.doctorId });
+      onClose(queue);
+    } catch (err: any) {
+      const message =
+        err?.response?.data?.error ||
+        err?.response?.data?.message ||
+        err?.message ||
+        "Failed to create visit. Please try again.";
+      setSubmitError(message);
+    }
   };
 
   const isFormValid = !!form.doctorId;
@@ -75,77 +87,80 @@ export default function CreateVisitForm({
     ]
   );
 
+  const disabledInputSx = {
+    "& .MuiInputBase-input.Mui-disabled": {
+      opacity: 1,
+      color: "text.primary",
+      WebkitTextFillColor: "text.primary",
+      fontWeight: 500,
+    },
+    "& .MuiInputLabel-root.Mui-disabled": {
+      color: "text.secondary",
+    },
+  };
+
   return (
-    <Box display="flex" flexDirection="column" gap={2} mt={1}>
-      {/* 1) Patient Name - non editable field */}
-      <TextField
-        label="Patient Name"
-        value={`${patient.firstName} ${patient.lastName}`}
-        fullWidth
-        disabled
-        InputProps={{ readOnly: true }}
-        sx={{
-          "& .MuiInputBase-input.Mui-disabled": {
-            opacity: 0.9,
-            color: "black",
-            WebkitTextFillColor: "black",
-          },
-        }}
-      />
+    <Box display="flex" flexDirection="column" gap={2.5}>
+      <Grid container spacing={2}>
+        <Grid size={{ xs: 12, md: 6 }}>
+          <TextField
+            label="Patient Name"
+            value={`${patient.firstName} ${patient.lastName}`}
+            fullWidth
+            disabled
+            InputProps={{ readOnly: true }}
+            sx={disabledInputSx}
+          />
+        </Grid>
+        <Grid size={{ xs: 12, md: 6 }}>
+          <TextField
+            label="Contact"
+            value={patient.contact}
+            fullWidth
+            disabled
+            InputProps={{ readOnly: true }}
+            sx={disabledInputSx}
+          />
+        </Grid>
+        <Grid size={{ xs: 12, md: 6 }}>
+          <TextField
+            label="Age"
+            value={patient.age || "—"}
+            fullWidth
+            disabled
+            InputProps={{ readOnly: true }}
+            sx={disabledInputSx}
+          />
+        </Grid>
+        <Grid size={{ xs: 12, md: 6 }}>
+          <TextField
+            label="Doctor"
+            select
+            value={form.doctorId}
+            onChange={handleChange("doctorId")}
+            fullWidth
+            required
+            disabled={loadingDoctors || isCreating}
+            error={!form.doctorId && !loadingDoctors}
+            helperText={
+              !form.doctorId && !loadingDoctors ? "Doctor is required" : ""
+            }
+          >
+            {menuItems}
+          </TextField>
+        </Grid>
+      </Grid>
 
-      {/* 2) Age - non editable field */}
-      <TextField
-        label="Age"
-        value={patient.age}
-        fullWidth
-        disabled
-        InputProps={{ readOnly: true }}
-        sx={{
-          "& .MuiInputBase-input.Mui-disabled": {
-            opacity: 0.9,
-            color: "black",
-            WebkitTextFillColor: "black",
-          },
-        }}
-      />
-
-      {/* 3) Contact - non editable field */}
-      <TextField
-        label="Contact"
-        value={patient.contact}
-        fullWidth
-        disabled
-        InputProps={{ readOnly: true }}
-        sx={{
-          "& .MuiInputBase-input.Mui-disabled": {
-            opacity: 0.9,
-            color: "black",
-            WebkitTextFillColor: "black",
-          },
-        }}
-      />
-
-      {/* 4) Doctor - Dropdown with fetched data */}
-      <TextField
-        label="Doctor"
-        select
-        value={form.doctorId}
-        onChange={handleChange("doctorId")}
-        fullWidth
-        required
-        disabled={loadingDoctors || isCreating}
-        error={!form.doctorId && !loadingDoctors}
-        helperText={
-          !form.doctorId && !loadingDoctors ? "Doctor is required" : ""
-        }
-      >
-        {menuItems}
-      </TextField>
+      {submitError && (
+        <Alert severity="error" onClose={() => setSubmitError(null)}>
+          {submitError}
+        </Alert>
+      )}
 
       {/* Action Buttons */}
-      <Box display="flex" justifyContent="flex-end" gap={1} mt={2}>
+      <Box display="flex" justifyContent="flex-end" gap={1.5} mt={1}>
         <Button variant="outlined" onClick={() => onClose()} disabled={isCreating}>
-          CANCEL
+          Cancel
         </Button>
         <Button
           variant="contained"
@@ -153,10 +168,10 @@ export default function CreateVisitForm({
           onClick={handleCreate}
           disabled={!isFormValid || loadingDoctors || isCreating}
           endIcon={
-            isCreating ? <CircularProgress size={20} color="inherit" /> : null
+            isCreating ? <CircularProgress size={18} color="inherit" /> : null
           }
         >
-          {isCreating ? "CREATING..." : "CREATE VISIT & GET QUEUE NUMBER"}
+          {isCreating ? "Creating..." : "Create Visit & Get Queue"}
         </Button>
       </Box>
     </Box>

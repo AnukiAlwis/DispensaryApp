@@ -1,5 +1,6 @@
-import { Typography, Box } from "@mui/material";
-import ElevatedCard from "../../../components/ElevatedCard";
+import { Typography, Box, Stack } from "@mui/material";
+import QueueBadge from "../../../components/QueueBadge";
+import StatusChip from "../../../components/StatusChip";
 import { Queue } from "../types";
 
 interface QueueCardProps {
@@ -8,37 +9,46 @@ interface QueueCardProps {
 
 export default function QueueCard({ queue }: QueueCardProps) {
   return (
-    <ElevatedCard>
-      <Box display="flex" flexDirection="row" gap={3} p={2} alignItems="center">
-        <Box display="flex" flexDirection="column" gap={2} flex={1}>
-          <Typography variant="body1">
-            <strong>Patient Name :</strong> {queue.patientName}
+    <Box
+      display="flex"
+      flexDirection={{ xs: "column", sm: "row" }}
+      alignItems="center"
+      gap={3}
+      p={1}
+    >
+      <Stack spacing={1.5} flex={1} width="100%">
+        <Box display="flex" justifyContent="space-between" alignItems="center">
+          <Typography variant="body2" color="text.secondary">
+            Patient Name
           </Typography>
-          <Typography variant="body1">
-            <strong>Doctor Name :</strong> {queue.doctorName}
-          </Typography>
-          <Typography variant="body1">
-            <strong>Status :</strong> {queue.status}
-          </Typography>
-        </Box>
-        <Box
-          width={120}
-          height={120}
-          bgcolor="warning.main"
-          borderRadius={2}
-          display="flex"
-          flexDirection="column"
-          alignItems="center"
-          justifyContent="center"
-        >
-          <Typography variant="h5" color="white" align="center">
-            Queue Number
-          </Typography>
-          <Typography variant="h4" color="white" align="center" fontWeight="bold">
-            {queue.queueNumber}
+          <Typography variant="body2" fontWeight={600}>
+            {queue.patientName}
           </Typography>
         </Box>
-      </Box>
-    </ElevatedCard>
+        <Box display="flex" justifyContent="space-between" alignItems="center">
+          <Typography variant="body2" color="text.secondary">
+            Doctor
+          </Typography>
+          <Typography variant="body2" fontWeight={600}>
+            Dr. {queue.doctorName}
+          </Typography>
+        </Box>
+        <Box display="flex" justifyContent="space-between" alignItems="center">
+          <Typography variant="body2" color="text.secondary">
+            Status
+          </Typography>
+          <StatusChip status={queue.status} />
+        </Box>
+        <Box display="flex" justifyContent="space-between" alignItems="center">
+          <Typography variant="body2" color="text.secondary">
+            Queue Date
+          </Typography>
+          <Typography variant="body2" fontWeight={600}>
+            {queue.queueDate}
+          </Typography>
+        </Box>
+      </Stack>
+      <QueueBadge queueNumber={queue.queueNumber} size="large" />
+    </Box>
   );
 }

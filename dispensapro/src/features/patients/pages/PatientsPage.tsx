@@ -1,15 +1,14 @@
-import {
-  Box,
-  Button,
-  Typography,
-  TextField,
-  CircularProgress,
-} from "@mui/material";
+import { Box, Button, Typography, CircularProgress } from "@mui/material";
 import { useState } from "react";
-import ElevatedCard from "../../../components/ElevatedCard";
+import AddIcon from "@mui/icons-material/Add";
+import SectionCard from "../../../components/SectionCard";
 import DataTable, { Column, CustomAction } from "../../../components/DataTable";
+import DataTableToolbar from "../../../components/DataTableToolbar";
 import DialogModal from "../../../components/DialogModal";
 import PatientForm from "../components/PatientForm";
+import PatientIdentityCell from "../../../components/PatientIdentityCell";
+import StatusChip from "../../../components/StatusChip";
+import PageHeader from "../../../components/PageHeader";
 import { usePatients } from "../hooks/usePatients";
 import { Patient } from "../types";
 import { useSelector } from "react-redux";
@@ -35,10 +34,36 @@ export default function PatientsPage() {
   const [search, setSearch] = useState("");
 
   const columns: Column[] = [
-    { id: "firstName", label: "First Name", sortable: true },
-    { id: "lastName", label: "Last Name", sortable: true },
-    { id: "age", label: "Age", sortable: true },
+    {
+      id: "patient",
+      label: "Patient",
+      sortable: true,
+      render: (row: Patient) => (
+        <PatientIdentityCell
+          firstName={row.firstName}
+          lastName={row.lastName}
+          id={row.id}
+        />
+      ),
+    },
+    {
+      id: "ageGender",
+      label: "Age / Gender",
+      sortable: false,
+      render: (row: Patient) => (
+        <Typography variant="body2" color="text.primary">
+          {row.age ? `${row.age} ` : "—"}
+          {row.gender ? ` / ${row.gender}` : ""}
+        </Typography>
+      ),
+    },
     { id: "contact", label: "Contact", sortable: false },
+    {
+      id: "status",
+      label: "Status",
+      sortable: false,
+      render: () => <StatusChip status="ACTIVE" />,
+    },
   ];
 
   const filteredPatients = patients.filter((p) =>
@@ -61,7 +86,7 @@ export default function PatientsPage() {
       icon: VisitIcon,
       tooltip: "View Visits",
       onClick: handleViewVisit,
-      text: "Visits",
+      color: "primary",
     },
   ];
 
@@ -80,40 +105,32 @@ export default function PatientsPage() {
     }
   };
 
+  const handleClosePatientModal = () => {
+    setOpen(false);
+    setEditingPatient(null);
+  };
+
   return (
     <Box>
-      {/* Header */}
-      {/* ... (Header content remains the same) */}
-      <Box
-        display="flex"
-        justifyContent="space-between"
-        alignItems="center"
-        mb={2}
-        flexWrap="wrap"
-        gap={2}
-      >
-        <Typography variant="h5">Patients</Typography>
-        <Button
-          variant="contained"
-          onClick={() => {
+      <PageHeader
+        title="Patients"
+        subtitle="Manage patient records, contact details and visit history."
+        action={{
+          label: "Add Patient",
+          onClick: () => {
             setEditingPatient(null);
             setOpen(true);
-          }}
-        >
-          Add Patient
-        </Button>
-      </Box>
+          },
+          icon: <AddIcon />,
+        }}
+      />
 
-      {/* Card with search + table */}
-      <ElevatedCard>
-        <Box display="flex" justifyContent="flex-end" mb={2}>
-          <TextField
-            size="small"
-            placeholder="Search..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-        </Box>
+      <SectionCard>
+        <DataTableToolbar
+          searchValue={search}
+          onSearchChange={setSearch}
+          searchPlaceholder="Search by name or phone number..."
+        />
 
         {loading ? (
           <Box
@@ -130,23 +147,33 @@ export default function PatientsPage() {
             rows={filteredPatients}
             onEdit={handleEdit}
             customActions={customActions}
+            emptyText="No patients found."
           />
         )}
-      </ElevatedCard>
+
+        <Box mt={2} display="flex" justifyContent="space-between" alignItems="center">
+          <Typography variant="caption" color="text.secondary">
+            Showing {filteredPatients.length} of {patients.length} patients
+          </Typography>
+        </Box>
+      </SectionCard>
 
       {/* Modal for Add / Edit */}
       <DialogModal
         open={open}
         title={editingPatient ? "Edit Patient" : "Add Patient"}
-        onClose={() => {
-          setOpen(false);
-          setEditingPatient(null);
-        }}
+        subtitle="Create a new patient profile for appointments, visits and billing."
+        onClose={handleClosePatientModal}
+        maxWidth="md"
+        hideCancel
+        hideSave
       >
         <PatientForm
           initialValues={editingPatient || {}}
           onSubmit={handleSubmit}
+          onCancel={handleClosePatientModal}
           createdById={loggedInUser?.id}
+          submitLabel={editingPatient ? "Save Changes" : "Save Patient"}
         />
       </DialogModal>
 
@@ -161,7 +188,6 @@ export default function PatientsPage() {
           setSelectedPatient(null);
         }}
       >
-        {/* Placeholder for the Create Visit Form component */}
         <CreateVisitForm
           patient={selectedPatient}
           onClose={() => setOpenVisitModal(false)}

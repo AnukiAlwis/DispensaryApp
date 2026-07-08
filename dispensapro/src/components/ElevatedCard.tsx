@@ -3,20 +3,21 @@ import { ReactNode } from "react";
 
 interface ElevatedCardProps {
   children: ReactNode;
+  noPadding?: boolean;
 }
 
-export default function ElevatedCard({ children }: ElevatedCardProps) {
+export default function ElevatedCard({ children, noPadding = false }: ElevatedCardProps) {
   return (
     <Card
-      elevation={3}
       sx={{
         width: "100%",
-        borderRadius: 2,
         overflow: "hidden",
-        mb: 2,
+        mb: 3,
       }}
     >
-      <CardContent>{children}</CardContent>
+      <CardContent sx={{ p: noPadding ? 0 : 3, "&:last-child": { pb: noPadding ? 0 : 3 } }}>
+        {children}
+      </CardContent>
     </Card>
   );
 }

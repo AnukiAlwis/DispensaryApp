@@ -1,21 +1,22 @@
-import { Box, Typography, CircularProgress, Button } from "@mui/material";
+import { Box, Typography, CircularProgress, Button, Stack, Chip } from "@mui/material";
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import ElevatedCard from "../../../components/ElevatedCard";
-import DataTable, { Column, CustomAction } from "../../../components/DataTable";
+import SectionCard from "../../../components/SectionCard";
+import DataTable, { Column } from "../../../components/DataTable";
 import { useGetVisitsByPatientId } from "../hooks/useVisit";
 import { useNavigate } from "react-router-dom";
-import { Patient } from "../../patients/types";
 import DialogModal from "../../../components/DialogModal";
 import CreateVisitForm from "../components/CreateVisitForm";
 import { usePatients } from "../../patients/hooks/usePatients";
 import CheckInIcon from "@mui/icons-material/FrontHand";
-import { useQueue } from "../../Queues/hooks/useQueue";
+import AddIcon from "@mui/icons-material/Add";
+import PatientIdentityCell from "../../../components/PatientIdentityCell";
+import StatusChip from "../../../components/StatusChip";
+import VisitSummaryCard from "../components/VisitSummaryCard";
 import QueueCard from "../../Queues/components/QueueCard";
 import { Queue } from "../../Queues/types";
 
 export default function VisitsPage() {
-  const { queues, addQueue } = useQueue();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const patientId = searchParams.get("patientId") || "";
@@ -37,7 +38,6 @@ export default function VisitsPage() {
 
   useEffect(() => {
     if (visits.length > 0) {
-      // sort by createdAt descending (latest first)
       const sortedVisits = [...visits].sort(
         (a, b) =>
           new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
@@ -71,10 +71,6 @@ export default function VisitsPage() {
     }
   }, [visits]);
 
-  const handleCheckin = () => {
-    console.log("Check-in action triggered");
-  };
-
   const formatDateTime = (isoString: string | null) => {
     if (!isoString) return "-";
     const d = new Date(isoString);
@@ -87,51 +83,112 @@ export default function VisitsPage() {
     )}:${String(d.getMinutes()).padStart(2, "0")}`;
   };
 
+  const formatDate = (isoString: string | null) => {
+    if (!isoString) return "-";
+    const d = new Date(isoString);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(
+      2,
+      "0"
+    )}-${String(d.getDate()).padStart(2, "0")}`;
+  };
+
   const handleCreateVisit = () => {
     setOpenVisitModal(true);
   };
 
-  const columns: Column[] = useMemo(
+  const oldVisitsColumns: Column[] = useMemo(
     () => [
-      { id: "createdAt", label: "Created At", sortable: true },
-      { id: "doctorName", label: "Doctor Name", sortable: true },
-      { id: "status", label: "Status", sortable: true },
+      {
+        id: "visitDate",
+        label: "Visited Date",
+        sortable: true,
+        render: (row: any) => (
+          <Typography variant="body2" fontWeight={600}>
+            {formatDate(row.visitTime || row.createdAt)}
+          </Typography>
+        ),
+      },
+      {
+        id: "doctorName",
+        label: "Doctor",
+        sortable: true,
+      },
+      {
+        id: "status",
+        label: "Status",
+        sortable: true,
+        render: (row: any) => <StatusChip status={row.status} />,
+      },
     ],
     []
   );
 
-  const oldVisitsColumns: Column[] = useMemo(
-    () => [
-      { id: "visitTime", label: "Visited Date", sortable: true },
-      { id: "doctorName", label: "Doctor Name", sortable: true },
-      { id: "status", label: "Status", sortable: true },
-    ],
-    []
-  );
+  const patientFullName = `${selectedPatient?.firstName || ""} ${
+    selectedPatient?.lastName || ""
+  }`.trim();
 
   return (
     <Box>
-      <Box
-        display="flex"
-        justifyContent="space-between"
-        alignItems="center"
-        mb={2}
-        flexWrap="wrap"
-        gap={2}
-      >
-        <Typography variant="h5">
-          Visits -{" "}
-          {selectedPatient?.firstName + " " + selectedPatient?.lastName}
-        </Typography>
-        <Button
-          variant="contained"
-          onClick={() => {
-            handleCreateVisit();
-          }}
+      {/* Patient Header Summary */}
+      <SectionCard>
+        <Box
+          display="flex"
+          justifyContent="space-between"
+          alignItems={{ xs: "flex-start", md: "center" }}
+          flexDirection={{ xs: "column", md: "row" }}
+          gap={2}
         >
-          Add New Visit
-        </Button>
-      </Box>
+          <Box>
+            <PatientIdentityCell
+              firstName={selectedPatient?.firstName}
+              lastName={selectedPatient?.lastName}
+              id={selectedPatient?.id}
+              size="large"
+            />
+            <Stack direction="row" spacing={1} mt={2} flexWrap="wrap">
+              {selectedPatient?.age && (
+                <Chip
+                  size="small"
+                  variant="outlined"
+                  label={`${selectedPatient.age} yrs`}
+                />
+              )}
+              {selectedPatient?.gender && (
+                <Chip
+                  size="small"
+                  variant="outlined"
+                  label={selectedPatient.gender}
+                />
+              )}
+              {selectedPatient?.contact && (
+                <Chip
+                  size="small"
+                  variant="outlined"
+                  label={selectedPatient.contact}
+                />
+              )}
+              <StatusChip status="ACTIVE" />
+            </Stack>
+          </Box>
+
+          <Stack direction="row" spacing={1.5}>
+            <Button
+              variant="outlined"
+              startIcon={<CheckInIcon />}
+              onClick={() => navigate("/", { state: { openCheckIn: true } })}
+            >
+              Check-In
+            </Button>
+            <Button
+              variant="contained"
+              startIcon={<AddIcon />}
+              onClick={handleCreateVisit}
+            >
+              Add Visit
+            </Button>
+          </Stack>
+        </Box>
+      </SectionCard>
 
       {loading ? (
         <Box
@@ -149,55 +206,55 @@ export default function VisitsPage() {
       ) : (
         <>
           {/* Today's Visits */}
-          <ElevatedCard>
-            <Typography variant="h6" mb={2}>
-              Today’s Visits
-            </Typography>
+          <SectionCard title="Today's Visit">
             {todayVisits.length === 0 ? (
-              <Typography>No visits for today</Typography>
+              <Typography variant="body2" color="text.secondary">
+                No visits scheduled for today.
+              </Typography>
             ) : (
-              <DataTable
-                columns={columns}
-                rows={todayVisits.map((v) => ({
-                  ...v,
-                  createdAt: formatDateTime(v.createdAt),
-                }))}
-              />
+              <Stack spacing={2}>
+                {todayVisits.map((v) => (
+                  <VisitSummaryCard
+                    key={v.id}
+                    time={formatDateTime(v.createdAt)}
+                    doctorName={v.doctorName || "Unassigned"}
+                    status={v.status}
+                    onOpenVisit={() => console.log("Open visit", v.id)}
+                  />
+                ))}
+              </Stack>
             )}
-          </ElevatedCard>
-
-          <Box mt={4} />
+          </SectionCard>
 
           {/* Old Visits */}
-          <ElevatedCard>
-            <Typography variant="h6" mb={2}>
-              Old Visits
-            </Typography>
+          <SectionCard title="Visit History">
             {oldVisits.length === 0 ? (
-              <Typography>No old visits to display</Typography>
+              <Typography variant="body2" color="text.secondary">
+                No previous visits to display.
+              </Typography>
             ) : (
               <DataTable
                 columns={oldVisitsColumns}
                 rows={oldVisits.map((v) => ({
                   ...v,
-                  visitTime: formatDateTime(v.visitTime),
+                  visitDate: formatDate(v.visitTime || v.createdAt),
                 }))}
+                emptyText="No old visits to display."
               />
             )}
-          </ElevatedCard>
+          </SectionCard>
         </>
       )}
 
       <DialogModal
         open={openVisitModal}
-        title={`Create Visit for ${selectedPatient?.firstName} ${
-          selectedPatient?.lastName || ""
-        }`}
-        onClose={() => {
-          setOpenVisitModal(false);
-        }}
+        title={`Create Visit${patientFullName ? ` for ${patientFullName}` : ""}`}
+        subtitle="Schedule a new visit for this patient and assign a queue number."
+        onClose={() => setOpenVisitModal(false)}
+        maxWidth="sm"
+        hideCancel
+        hideSave
       >
-        {/* Placeholder for the Create Visit Form component */}
         <CreateVisitForm
           patient={selectedPatient}
           onClose={(queue) => {
@@ -210,9 +267,11 @@ export default function VisitsPage() {
       {createdQueue && (
         <DialogModal
           open={!!createdQueue}
-          title={"Queue Number " + createdQueue.queueNumber + " Assigned"}
+          title={`Queue Number ${createdQueue.queueNumber} Assigned`}
+          subtitle="The patient has been added to the queue successfully."
           onClose={() => setCreatedQueue(null)}
-          cancelText="CLOSE"
+          cancelText="Close"
+          maxWidth="sm"
         >
           <QueueCard queue={createdQueue} />
         </DialogModal>

@@ -138,6 +138,27 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST); // 400
     }
 
+    @ExceptionHandler(DuplicateQueueEntryException.class)
+    public ResponseEntity<Map<String, String>> handleDuplicateQueueEntry(DuplicateQueueEntryException ex) {
+        Map<String, String> error = new HashMap<>();
+        error.put("error", ex.getMessage());
+        return new ResponseEntity<>(error, HttpStatus.CONFLICT); // 409
+    }
+
+    @ExceptionHandler(QueueEntryNotFoundException.class)
+    public ResponseEntity<Map<String, String>> handleQueueEntryNotFound(QueueEntryNotFoundException ex) {
+        Map<String, String> error = new HashMap<>();
+        error.put("error", ex.getMessage());
+        return new ResponseEntity<>(error, HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(PatientNotFoundException.class)
+    public ResponseEntity<Map<String, String>> handlePatientNotFound(PatientNotFoundException ex) {
+        Map<String, String> error = new HashMap<>();
+        error.put("error", ex.getMessage());
+        return new ResponseEntity<>(error, HttpStatus.NOT_FOUND);
+    }
+
 
     // Generic Fallback
     @ExceptionHandler(Exception.class)

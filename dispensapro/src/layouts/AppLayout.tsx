@@ -32,14 +32,14 @@ export default function AppLayout() {
           component="main"
           flexGrow={1}
           minWidth={0}
-          p={{ xs: 1, sm: 2, md: 3 }}
-          bgcolor="#f9f9f9"
+          p={{ xs: 2, sm: 3, md: 4 }}
+          bgcolor="background.default"
         >
           {/* TopSummaryBar */}
           <TopSummaryBar />
 
           {/* Page content */}
-          <Box mt={2}>
+          <Box mt={3}>
             <Outlet />
           </Box>
         </Box>
