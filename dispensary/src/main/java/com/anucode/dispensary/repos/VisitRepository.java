@@ -12,6 +12,6 @@ public interface VisitRepository extends JpaRepository<Visit, UUID> {
 
     List<Visit> findByTenantId(UUID tenantId);
 
-    List<Visit> findByTenantIdAndPatientId(UUID tenantId, UUID patientId);
+    List<Visit> findByTenantIdAndPatientIdOrderByVisitTimeDesc(UUID tenantId, UUID patientId);
 }
 

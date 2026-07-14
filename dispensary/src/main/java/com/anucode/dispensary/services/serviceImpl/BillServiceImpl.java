@@ -22,6 +22,7 @@ public class BillServiceImpl implements BillService {
     private final BillLineItemRepository billLineItemRepository;
     private final VisitRepository visitRepository;
     private final PrescriptionRepository prescriptionRepository;
+    private final PrescriptionItemRepository prescriptionItemRepository;
     private final DispenseRepository dispenseRepository;
     private final MedicineRepository medicineRepository;
     private final UserRepository userRepository;
@@ -32,6 +33,7 @@ public class BillServiceImpl implements BillService {
                            BillLineItemRepository billLineItemRepository,
                            VisitRepository visitRepository,
                            PrescriptionRepository prescriptionRepository,
+                           PrescriptionItemRepository prescriptionItemRepository,
                            DispenseRepository dispenseRepository,
                            MedicineRepository medicineRepository,
                            UserRepository userRepository,
@@ -41,6 +43,7 @@ public class BillServiceImpl implements BillService {
         this.billLineItemRepository = billLineItemRepository;
         this.visitRepository = visitRepository;
         this.prescriptionRepository = prescriptionRepository;
+        this.prescriptionItemRepository = prescriptionItemRepository;
         this.dispenseRepository = dispenseRepository;
         this.medicineRepository = medicineRepository;
         this.userRepository = userRepository;
@@ -116,28 +119,57 @@ public class BillServiceImpl implements BillService {
         // Gather dispenses for the prescription
         List<Dispense> dispenses = dispenseRepository.findByPrescriptionItemPrescriptionId(bill.getPrescription().getId());
 
-        // Group by medicine
-        Map<UUID, List<Dispense>> grouped = dispenses.stream()
-                .collect(Collectors.groupingBy(d -> d.getMedicine().getId()));
+        if (!dispenses.isEmpty()) {
+            // Group by medicine
+            Map<UUID, List<Dispense>> grouped = dispenses.stream()
+                    .collect(Collectors.groupingBy(d -> d.getMedicine().getId()));
 
-        for (Map.Entry<UUID, List<Dispense>> e : grouped.entrySet()) {
-            UUID medicineId = e.getKey();
-            Medicine med = medicineRepository.findById(medicineId)
-                    .orElseThrow(() -> new MedicineNotFoundException("Medicine not found in dispenses"));
+            for (Map.Entry<UUID, List<Dispense>> e : grouped.entrySet()) {
+                UUID medicineId = e.getKey();
+                Medicine med = medicineRepository.findById(medicineId)
+                        .orElseThrow(() -> new MedicineNotFoundException("Medicine not found in dispenses"));
 
-            int totalQty = e.getValue().stream().mapToInt(Dispense::getQtyDispensed).sum();
-            BigDecimal unitPrice = med.getSellPrice() == null ? BigDecimal.ZERO : med.getSellPrice();
-            BigDecimal lineTotal = unitPrice.multiply(BigDecimal.valueOf(totalQty));
+                int totalQty = e.getValue().stream().mapToInt(Dispense::getQtyDispensed).sum();
+                BigDecimal unitPrice = med.getSellPrice() == null ? BigDecimal.ZERO : med.getSellPrice();
+                BigDecimal lineTotal = unitPrice.multiply(BigDecimal.valueOf(totalQty));
 
-            BillLineItem item = new BillLineItem();
-            item.setId(UUID.randomUUID());
-            item.setBill(bill);
-            item.setMedicine(med);
-            item.setQty(totalQty);
-            item.setUnitPrice(unitPrice);
-            item.setLineTotal(lineTotal);
+                BillLineItem item = new BillLineItem();
+                item.setId(UUID.randomUUID());
+                item.setBill(bill);
+                item.setMedicine(med);
+                item.setQty(totalQty);
+                item.setUnitPrice(unitPrice);
+                item.setLineTotal(lineTotal);
 
-            billLineItemRepository.save(item);
+                billLineItemRepository.save(item);
+            }
+        } else {
+            // No dispenses yet: calculate a temporary total from prescribed items
+            List<PrescriptionItem> prescriptionItems = prescriptionItemRepository.findByPrescriptionId(bill.getPrescription().getId());
+            Map<UUID, List<PrescriptionItem>> grouped = prescriptionItems.stream()
+                    .collect(Collectors.groupingBy(pi -> pi.getMedicine().getId()));
+
+            for (Map.Entry<UUID, List<PrescriptionItem>> e : grouped.entrySet()) {
+                UUID medicineId = e.getKey();
+                Medicine med = medicineRepository.findById(medicineId)
+                        .orElseThrow(() -> new MedicineNotFoundException("Medicine not found in prescription items"));
+
+                int totalQty = e.getValue().stream()
+                        .mapToInt(pi -> pi.getQtyPrescribed() != null ? pi.getQtyPrescribed() : 0)
+                        .sum();
+                BigDecimal unitPrice = med.getSellPrice() == null ? BigDecimal.ZERO : med.getSellPrice();
+                BigDecimal lineTotal = unitPrice.multiply(BigDecimal.valueOf(totalQty));
+
+                BillLineItem item = new BillLineItem();
+                item.setId(UUID.randomUUID());
+                item.setBill(bill);
+                item.setMedicine(med);
+                item.setQty(totalQty);
+                item.setUnitPrice(unitPrice);
+                item.setLineTotal(lineTotal);
+
+                billLineItemRepository.save(item);
+            }
         }
     }
 

@@ -112,7 +112,7 @@ public class VisitServiceImpl implements VisitService {
         List<Visit> visits;
 
         if (patientId != null) {
-            visits = visitRepository.findByTenantIdAndPatientId(tenantId, patientId);
+            visits = visitRepository.findByTenantIdAndPatientIdOrderByVisitTimeDesc(tenantId, patientId);
         } else {
             visits = visitRepository.findByTenantId(tenantId);
         }

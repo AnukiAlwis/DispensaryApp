@@ -24,5 +24,8 @@ export const visitService = {
     return res.data;
   },
 
-  
+  createNote: async (visitId: string, data: { note: string }): Promise<any> => {
+    const res = await apiClient.post(`/visits/${visitId}/notes`, data);
+    return res.data;
+  },
 };
