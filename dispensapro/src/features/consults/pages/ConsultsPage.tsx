@@ -209,7 +209,7 @@ export default function ConsultsPage() {
           <ActivePatientHeader
             queue={currentQueue}
             patient={currentPatient}
-            lastVisitDate={getLastVisitDate()}
+            bookingDateTime={currentQueue.createdAt}
           />
 
           <SectionCard title="Past Visits" noPadding>

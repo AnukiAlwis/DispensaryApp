@@ -5,13 +5,13 @@ import { Patient } from "../../patients/types";
 interface ActivePatientHeaderProps {
   queue: Queue;
   patient: Patient;
-  lastVisitDate?: string | null;
+  bookingDateTime?: string | null;
 }
 
 export default function ActivePatientHeader({
   queue,
   patient,
-  lastVisitDate,
+  bookingDateTime,
 }: ActivePatientHeaderProps) {
   return (
     <Box
@@ -35,8 +35,8 @@ export default function ActivePatientHeader({
         <Typography variant="body1" sx={{ mt: 0.5, opacity: 0.9 }}>
           {patient.age ? `Age: ${patient.age}, ` : ""}
           Gender: {patient.gender || "N/A"}
-          {lastVisitDate
-            ? `, Last Visit Date: ${new Date(lastVisitDate).toLocaleDateString()}`
+          {bookingDateTime
+            ? `, Booking Date Time: ${new Date(bookingDateTime).toLocaleString()}`
             : ", First Visit"}
         </Typography>
       </Box>
