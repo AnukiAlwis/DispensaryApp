@@ -1,7 +1,9 @@
 package com.anucode.dispensary.config;
 
 import com.anucode.dispensary.dtos.PatientResponseDto;
+import com.anucode.dispensary.dtos.VisitResponseDto;
 import com.anucode.dispensary.entities.Patient;
+import com.anucode.dispensary.entities.Visit;
 import org.modelmapper.ModelMapper;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -20,9 +22,11 @@ public class AppConfig {
 //                    mapper.map(src -> src.getCreatedBy() != null ? src.getCreatedBy().getId() : null,
 //                            PatientResponseDto::setCreatedById);
 //                });
-//
-//        // Ignore unmapped fields to avoid errors
-//        modelMapper.getConfiguration().setAmbiguityIgnored(true);
+
+        modelMapper.getConfiguration().setAmbiguityIgnored(true);
+
+        modelMapper.typeMap(Visit.class, VisitResponseDto.class)
+                .addMappings(mapper -> mapper.skip(VisitResponseDto::setNotes));
 
         return modelMapper;
     }

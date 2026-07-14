@@ -11,4 +11,6 @@ import java.util.UUID;
 public interface VisitNoteRepository extends JpaRepository<VisitNote, UUID> {
 
     List<VisitNote> findByVisitIdOrderByRecordedAtAsc(UUID visitId);
+
+    List<VisitNote> findByVisitIdOrderByRecordedAtDesc(UUID visitId);
 }

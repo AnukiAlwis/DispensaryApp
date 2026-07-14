@@ -130,6 +130,21 @@ public class VisitServiceImpl implements VisitService {
                         dto.setDoctorName(v.getDoctor().getFullName());
                     }
 
+                    List<VisitNoteResponseDto> notes = visitNoteRepository.findByVisitIdOrderByRecordedAtDesc(v.getId())
+                            .stream()
+                            .map(note -> {
+                                VisitNoteResponseDto noteDto = modelMapper.map(note, VisitNoteResponseDto.class);
+                                if (note.getRecordedBy() != null) {
+                                    noteDto.setRecordedById(note.getRecordedBy().getId());
+                                    noteDto.setRecordedByUsername(note.getRecordedBy().getUsername());
+                                    noteDto.setRecordedByRole(note.getRecordedBy().getRole().name());
+                                }
+                                return noteDto;
+                            })
+                            .collect(Collectors.toList());
+
+                    dto.setNotes(notes);
+
                     return dto;
                 })
                 .collect(Collectors.toList());

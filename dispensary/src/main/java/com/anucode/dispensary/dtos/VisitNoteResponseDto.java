@@ -11,6 +11,8 @@ public class VisitNoteResponseDto {
     private UUID id;
     private String note;
     private UUID recordedById;
+    private String recordedByUsername;
+    private String recordedByRole;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

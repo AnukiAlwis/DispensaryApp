@@ -6,6 +6,7 @@ import {
   Typography,
   Button,
   Box,
+  Stack,
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import DataTable from "../../../components/DataTable";
@@ -45,6 +46,35 @@ export default function PastVisitsAccordion({
       id: "status",
       label: "Status",
       render: (row: Visit) => row.status,
+    },
+    {
+      id: "notes",
+      label: "Notes",
+      render: (row: Visit) => {
+        if (!row.notes || row.notes.length === 0) {
+          return (
+            <Typography variant="body2" color="text.secondary">
+              —
+            </Typography>
+          );
+        }
+        return (
+          <Stack spacing={0.5} alignItems="flex-start">
+            {row.notes.map((note) => (
+              <Box key={note.id}>
+                <Typography variant="body2" sx={{ fontWeight: 600, display: "inline" }}>
+                  {note.recordedByUsername}
+                  {note.recordedByRole && ` (${note.recordedByRole})`}
+                  :{" "}
+                </Typography>
+                <Typography variant="body2" sx={{ display: "inline" }}>
+                  {note.note}
+                </Typography>
+              </Box>
+            ))}
+          </Stack>
+        );
+      },
     },
   ];
 

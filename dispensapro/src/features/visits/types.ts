@@ -20,6 +20,14 @@ export interface VisitPayload {
 }
 
 
+export interface VisitNote {
+  id: string;
+  note: string;
+  recordedById: string;
+  recordedByUsername: string;
+  recordedByRole: string;
+}
+
 export interface Visit {
   id: string;
   patientId: string;
@@ -30,4 +38,5 @@ export interface Visit {
   createdAt: string;
   updatedAt?: string | null;
   createdById: string;
+  notes?: VisitNote[];
 }
