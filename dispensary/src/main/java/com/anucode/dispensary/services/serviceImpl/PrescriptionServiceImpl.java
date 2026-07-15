@@ -174,5 +174,126 @@ public class PrescriptionServiceImpl implements PrescriptionService {
 
         return modelMapper.map(prescription, PrescriptionResponseDto.class);
     }
+
+    @Override
+    public CurrentServingPrescriptionDto getCurrentServing(UUID tenantId) {
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime startOfDay = now.toLocalDate().atStartOfDay();
+        LocalDateTime startOfTomorrow = startOfDay.plusDays(1);
+
+        return prescriptionRepository
+                .findFirstByTenantIdAndStatusAndUpdatedAtBetweenOrderByUpdatedAtAsc(
+                        tenantId, Prescription.Status.ISSUED, startOfDay, startOfTomorrow)
+                .map(prescription -> {
+                    CurrentServingPrescriptionDto dto = new CurrentServingPrescriptionDto();
+                    dto.setId(prescription.getId());
+                    Patient patient = prescription.getPatient();
+                    dto.setPatientName(patient != null ? (patient.getFirstName() + " " + patient.getLastName()) : null);
+                    dto.setPatientPhone(patient != null ? patient.getContact() : null);
+                    User doctor = prescription.getDoctor();
+                    dto.setDoctorName(doctor != null ? doctor.getFullName() : null);
+                    dto.setIssuedAt(prescription.getUpdatedAt()); // using updatedAt as proxy for issued time
+                    return dto;
+                })
+                .orElse(null); // Return null if no current serving prescription exists
+    }
+
+    @Override
+    public List<CurrentServingPrescriptionDto> getUpNext(UUID tenantId) {
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime startOfDay = now.toLocalDate().atStartOfDay();
+        LocalDateTime startOfTomorrow = startOfDay.plusDays(1);
+
+        // First get current serving to exclude it
+        CurrentServingPrescriptionDto currentServing = getCurrentServing(tenantId);
+        UUID excludeId = currentServing != null ? currentServing.getId() : null;
+
+        List<Prescription> prescriptions;
+        if (excludeId != null) {
+            prescriptions = prescriptionRepository
+                    .findByTenantIdAndStatusAndUpdatedAtBetweenAndIdNotOrderByUpdatedAtAsc(
+                            tenantId, Prescription.Status.ISSUED, startOfDay, startOfTomorrow, excludeId);
+        } else {
+            // If no current serving, get all ISSUED prescriptions for today using the existing method
+            prescriptions = prescriptionRepository
+                    .findByTenantIdAndStatus(tenantId, Prescription.Status.ISSUED)
+                    .stream()
+                    .filter(p -> p.getUpdatedAt() != null && 
+                            !p.getUpdatedAt().isBefore(startOfDay) && 
+                            p.getUpdatedAt().isBefore(startOfTomorrow))
+                    .sorted(java.util.Comparator.comparing(Prescription::getUpdatedAt))
+                    .collect(java.util.stream.Collectors.toList());
+        }
+
+        return prescriptions.stream()
+                .map(prescription -> {
+                    CurrentServingPrescriptionDto dto = new CurrentServingPrescriptionDto();
+                    dto.setId(prescription.getId());
+                    Patient patient = prescription.getPatient();
+                    dto.setPatientName(patient != null ? (patient.getFirstName() + " " + patient.getLastName()) : null);
+                    dto.setPatientPhone(patient != null ? patient.getContact() : null);
+                    User doctor = prescription.getDoctor();
+                    dto.setDoctorName(doctor != null ? doctor.getFullName() : null);
+                    dto.setIssuedAt(prescription.getUpdatedAt());
+                    return dto;
+                })
+                .collect(java.util.stream.Collectors.toList());
+    }
+
+    @Override
+    public List<PrescriptionMedicineDto> getPrescriptionMedicines(UUID tenantId, UUID prescriptionId) {
+        Prescription prescription = prescriptionRepository.findById(prescriptionId)
+                .orElseThrow(() -> new NotFoundException("Prescription not found"));
+
+        if (!prescription.getTenant().getId().equals(tenantId))
+            throw new TenantMismatchException("Tenant mismatch");
+
+        List<PrescriptionItem> items = prescriptionItemRepository.findByPrescriptionId(prescriptionId);
+
+        // Sort by frequency weight (descending) then quantity (descending)
+        // Frequency weight: extract leading integer from frequency string via regex, default 0 if unparseable
+        items.sort((a, b) -> {
+            int freqWeightA = extractFrequencyWeight(a.getFrequency());
+            int freqWeightB = extractFrequencyWeight(b.getFrequency());
+            if (freqWeightB != freqWeightA) {
+                return Integer.compare(freqWeightB, freqWeightA); // descending
+            }
+            // Tie-break by quantity descending
+            Integer qtyA = a.getQtyPrescribed() != null ? a.getQtyPrescribed() : 0;
+            Integer qtyB = b.getQtyPrescribed() != null ? b.getQtyPrescribed() : 0;
+            return Integer.compare(qtyB, qtyA);
+        });
+
+        return items.stream()
+                .map(item -> {
+                    PrescriptionMedicineDto dto = new PrescriptionMedicineDto();
+                    dto.setId(item.getId());
+                    dto.setMedicineName(item.getMedicine() != null ? item.getMedicine().getName() : null);
+                    dto.setStrength(item.getMedicine() != null ? item.getMedicine().getStrength() : null);
+                    dto.setDose(item.getDosage());
+                    dto.setFrequency(item.getFrequency());
+                    dto.setQuantity(item.getQtyPrescribed());
+                    dto.setCurrentStock(item.getMedicine() != null ? item.getMedicine().getQuantity() : null);
+                    return dto;
+                })
+                .collect(java.util.stream.Collectors.toList());
+    }
+
+    private int extractFrequencyWeight(String frequency) {
+        if (frequency == null || frequency.isEmpty()) {
+            return 0;
+        }
+        // Extract leading integer via regex ^(\d+)
+        java.util.regex.Pattern pattern = java.util.regex.Pattern.compile("^(\\d+)");
+        java.util.regex.Matcher matcher = pattern.matcher(frequency);
+        if (matcher.find()) {
+            try {
+                return Integer.parseInt(matcher.group(1));
+            } catch (NumberFormatException e) {
+                return 0;
+            }
+        }
+        return 0;
+    }
 }
 

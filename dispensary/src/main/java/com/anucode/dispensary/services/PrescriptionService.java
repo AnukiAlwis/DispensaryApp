@@ -1,9 +1,6 @@
 package com.anucode.dispensary.services;
 
-import com.anucode.dispensary.dtos.PrescriptionItemRequestDto;
-import com.anucode.dispensary.dtos.PrescriptionItemResponseDto;
-import com.anucode.dispensary.dtos.PrescriptionRequestDto;
-import com.anucode.dispensary.dtos.PrescriptionResponseDto;
+import com.anucode.dispensary.dtos.*;
 
 import java.util.List;
 import java.util.UUID;
@@ -21,4 +18,11 @@ public interface PrescriptionService {
     PrescriptionResponseDto updatePrescriptionStatus(UUID tenantId, UUID prescriptionId, String newStatus);
 
     PrescriptionResponseDto getPrescriptionByVisitId(UUID tenantId, UUID visitId);
+
+    // New dispensing workflow methods
+    CurrentServingPrescriptionDto getCurrentServing(UUID tenantId);
+
+    List<CurrentServingPrescriptionDto> getUpNext(UUID tenantId);
+
+    List<PrescriptionMedicineDto> getPrescriptionMedicines(UUID tenantId, UUID prescriptionId);
 }

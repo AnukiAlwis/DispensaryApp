@@ -765,6 +765,96 @@ Retrieves prescription details by visit ID.
 
 ---
 
+### Get Current Serving Prescription
+**GET** `/prescriptions/current-serving`
+
+Retrieves the oldest ISSUED prescription for today (current serving).
+
+**Response:**
+```json
+{
+  "id": "550e8400-e29b-41d4-a716-446655440000",
+  "patientName": "John Doe",
+  "patientPhone": "+94771234567",
+  "doctorName": "Dr. Smith",
+  "issuedAt": "2024-01-15T10:30:00"
+}
+```
+
+**Status Codes:**
+- `200` - Current serving prescription retrieved successfully
+- `204` - No current serving prescription exists
+
+---
+
+### Get Up Next Prescriptions
+**GET** `/prescriptions/up-next`
+
+Retrieves all remaining ISSUED prescriptions for today (excluding current serving), oldest first.
+
+**Response:**
+```json
+[
+  {
+    "id": "550e8400-e29b-41d4-a716-446655440001",
+    "patientName": "Jane Smith",
+    "patientPhone": "+94771234568",
+    "doctorName": "Dr. Johnson",
+    "issuedAt": "2024-01-15T11:00:00"
+  },
+  {
+    "id": "550e8400-e29b-41d4-a716-446655440002",
+    "patientName": "Bob Wilson",
+    "patientPhone": "+94771234569",
+    "doctorName": "Dr. Smith",
+    "issuedAt": "2024-01-15T11:30:00"
+  }
+]
+```
+
+**Status Codes:**
+- `200` - Up next prescriptions retrieved successfully
+
+---
+
+### Get Prescription Medicines
+**GET** `/prescriptions/{id}/medicines`
+
+Retrieves medicines for a prescription, sorted by frequency (highest to lowest) then quantity (highest to lowest).
+
+**Path Parameters:**
+- `id` (UUID) - Prescription ID
+
+**Response:**
+```json
+[
+  {
+    "id": "550e8400-e29b-41d4-a716-446655440000",
+    "medicineName": "Paracetamol",
+    "strength": "500mg",
+    "dose": "1 tablet",
+    "frequency": "3x/day",
+    "quantity": 30,
+    "currentStock": 100
+  },
+  {
+    "id": "550e8400-e29b-41d4-a716-446655440001",
+    "medicineName": "Amoxicillin",
+    "strength": "250mg",
+    "dose": "1 capsule",
+    "frequency": "2x/day",
+    "quantity": 14,
+    "currentStock": 50
+  }
+]
+```
+
+**Status Codes:**
+- `200` - Prescription medicines retrieved successfully
+- `404` - Prescription not found
+
+---
+
 ## Queue Management API
 
 ### Create Queue Entry
