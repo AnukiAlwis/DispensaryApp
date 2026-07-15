@@ -7,11 +7,13 @@ export interface PrescriptionItem {
   prescriptionId: string;
   medicineId: string;
   medicine?: Medicine;
+  medicineName?: string;
+  medicineStrength?: string;
   dosage: string;
   frequency: string;
-  duration: number;
+  durationDays: number;
   instructions: string;
-  quantity: number;
+  qtyPrescribed: number;
   createdAt?: string;
   updatedAt?: string;
 }

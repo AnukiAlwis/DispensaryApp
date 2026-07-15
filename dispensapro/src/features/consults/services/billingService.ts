@@ -36,4 +36,9 @@ export const billingService = {
     );
     return response.data;
   },
+
+  getByPrescriptionId: async (prescriptionId: string): Promise<Bill> => {
+    const response = await apiClient.get<Bill>(BASE_URL, { params: { prescriptionId } });
+    return response.data;
+  },
 };

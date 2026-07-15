@@ -17,18 +17,22 @@ interface BillingSectionProps {
     medicineTotal: number;
     totalAmount: number;
   } | null>;
+  doctorDiscountPct: number;
+  pharmacyDiscountPct: number;
+  onDiscountsChange: (doctorPct: number, pharmacyPct: number) => void;
 }
 
 export default function BillingSection({
   hasPrescriptionItems,
   disabled = false,
   onCalculate,
+  doctorDiscountPct,
+  pharmacyDiscountPct,
+  onDiscountsChange,
 }: BillingSectionProps) {
   const [calculated, setCalculated] = useState(false);
   const [doctorFee, setDoctorFee] = useState(0);
   const [medicineTotal, setMedicineTotal] = useState(0);
-  const [doctorDiscountPct, setDoctorDiscountPct] = useState(0);
-  const [pharmacyDiscountPct, setPharmacyDiscountPct] = useState(0);
   const [totalAmount, setTotalAmount] = useState(0);
   const [isCalculating, setIsCalculating] = useState(false);
 
@@ -56,22 +60,21 @@ export default function BillingSection({
     e: React.ChangeEvent<HTMLInputElement>
   ) => {
     const value = Math.min(100, Math.max(0, Number(e.target.value)));
-    setDoctorDiscountPct(value);
+    onDiscountsChange(value, pharmacyDiscountPct);
   };
 
   const handlePharmacyDiscountChange = (
     e: React.ChangeEvent<HTMLInputElement>
   ) => {
     const value = Math.min(100, Math.max(0, Number(e.target.value)));
-    setPharmacyDiscountPct(value);
+    onDiscountsChange(doctorDiscountPct, value);
   };
 
   const reset = () => {
     setCalculated(false);
     setDoctorFee(0);
     setMedicineTotal(0);
-    setDoctorDiscountPct(0);
-    setPharmacyDiscountPct(0);
+    onDiscountsChange(0, 0);
     setTotalAmount(0);
   };
 

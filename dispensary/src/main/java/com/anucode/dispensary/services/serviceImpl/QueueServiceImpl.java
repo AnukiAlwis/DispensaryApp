@@ -158,6 +158,17 @@ public class QueueServiceImpl implements QueueService {
     }
 
     @Override
+    public QueueResponseDto getQueueById(UUID tenantId, UUID queueId) {
+        QueueEntry entry = queueRepository.findById(queueId)
+                .orElseThrow(() -> new QueueEntryNotFoundException("Queue entry not found"));
+
+        if (!entry.getTenant().getId().equals(tenantId))
+            throw new TenantMismatchException("Tenant mismatch");
+
+        return mapToDto(entry);
+    }
+
+    @Override
     public List<QueueResponseDto> searchQueueByPatientNameOrPhone(UUID tenantId, LocalDate queueDate, String searchTerm) {
         return queueRepository.searchByPatientNameOrPhone(tenantId, queueDate, searchTerm)
                 .stream()

@@ -88,6 +88,13 @@ public class QueueController {
         return ResponseEntity.ok(list);
     }
 
+    @GetMapping("/{id}")
+    public ResponseEntity<QueueResponseDto> getQueueById(@PathVariable UUID id) {
+        UUID tenantId = UUID.fromString(TenantContext.getTenantId());
+        QueueResponseDto dto = queueService.getQueueById(tenantId, id);
+        return ResponseEntity.ok(dto);
+    }
+
     @GetMapping("/search")
     public ResponseEntity<List<QueueResponseDto>> searchQueueByPatient(@RequestParam String searchTerm) {
         UUID tenantId = UUID.fromString(TenantContext.getTenantId());

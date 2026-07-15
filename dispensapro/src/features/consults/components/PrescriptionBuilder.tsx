@@ -48,9 +48,9 @@ export default function PrescriptionBuilder({
         medicine: draftMedicine || undefined,
         dosage: item.dosage,
         frequency: item.frequency,
-        duration: item.durationDays,
+        durationDays: item.durationDays,
         instructions: item.instructions,
-        quantity: item.qtyPrescribed,
+        qtyPrescribed: item.qtyPrescribed,
       };
       onItemAdded(newItem);
       onPrescriptionChanged();
@@ -88,8 +88,8 @@ export default function PrescriptionBuilder({
 }
 
 function CommittedItemRow({ item }: { item: PrescriptionItem }) {
-  const medicineName = `${item.medicine?.name || "Medicine"} ${
-    item.medicine?.strength || ""
+  const medicineName = `${item.medicineName || item.medicine?.name || "Medicine"} ${
+    item.medicineStrength || item.medicine?.strength || ""
   }`.trim();
 
   return (
@@ -132,7 +132,7 @@ function CommittedItemRow({ item }: { item: PrescriptionItem }) {
             fullWidth
             type="number"
             label="Days"
-            value={item.duration}
+            value={item.durationDays}
             disabled
           />
         </Grid>
@@ -156,7 +156,7 @@ function CommittedItemRow({ item }: { item: PrescriptionItem }) {
           <TextField
             fullWidth
             label="Qty"
-            value={item.quantity}
+            value={item.qtyPrescribed}
             InputProps={{ readOnly: true }}
             disabled
           />

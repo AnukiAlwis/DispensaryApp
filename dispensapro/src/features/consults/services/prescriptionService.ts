@@ -54,4 +54,14 @@ export const prescriptionService = {
     );
     return response.data;
   },
+
+  getByVisitId: async (visitId: string): Promise<Prescription> => {
+    const response = await apiClient.get<Prescription>(BASE_URL, { params: { visitId } });
+    return response.data;
+  },
 };
+
+export const normalizePrescriptionStatus = (
+  status: string
+): Prescription["status"] =>
+  status === "STARTED" ? "ACTIVE" : (status as Prescription["status"]);

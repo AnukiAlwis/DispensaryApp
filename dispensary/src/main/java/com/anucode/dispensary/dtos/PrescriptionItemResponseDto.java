@@ -8,6 +8,8 @@ import java.util.UUID;
 public class PrescriptionItemResponseDto {
     private UUID id;
     private UUID medicineId;
+    private String medicineName;
+    private String medicineStrength;
     private String dosage;
     private String frequency;
     private Integer durationDays;

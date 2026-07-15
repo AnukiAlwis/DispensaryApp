@@ -123,7 +123,14 @@ public class PrescriptionServiceImpl implements PrescriptionService {
             throw new TenantMismatchException("Tenant mismatch");
 
         return prescriptionItemRepository.findByPrescriptionId(prescriptionId).stream()
-                .map(item -> modelMapper.map(item, PrescriptionItemResponseDto.class))
+                .map(item -> {
+                    PrescriptionItemResponseDto dto = modelMapper.map(item, PrescriptionItemResponseDto.class);
+                    if (item.getMedicine() != null) {
+                        dto.setMedicineName(item.getMedicine().getName());
+                        dto.setMedicineStrength(item.getMedicine().getStrength());
+                    }
+                    return dto;
+                })
                 .collect(Collectors.toList());
     }
 

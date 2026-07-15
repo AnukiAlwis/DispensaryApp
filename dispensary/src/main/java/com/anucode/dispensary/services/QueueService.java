@@ -23,5 +23,7 @@ public interface QueueService {
 
     List<QueueResponseDto> getDoctorQueue(UUID tenantId, UUID doctorId);
 
+    QueueResponseDto getQueueById(UUID tenantId, UUID queueId);
+
     List<QueueResponseDto> searchQueueByPatientNameOrPhone(UUID tenantId, LocalDate queueDate, String searchTerm);
 }
