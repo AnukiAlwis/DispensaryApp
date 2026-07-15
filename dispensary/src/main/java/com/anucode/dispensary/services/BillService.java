@@ -18,4 +18,6 @@ public interface BillService {
     BillResponseDto updateStatus(UUID tenantId, UUID currentUserId, UUID billId, BillStatusUpdateDto dto);
 
     List<BillResponseDto> listBillsByPatient(UUID tenantId, UUID patientId);
+
+    BillResponseDto getBillByPrescriptionId(UUID tenantId, UUID prescriptionId);
 }

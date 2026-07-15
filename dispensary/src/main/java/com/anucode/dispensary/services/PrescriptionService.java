@@ -19,4 +19,6 @@ public interface PrescriptionService {
     List<PrescriptionItemResponseDto> getPrescriptionItems(UUID tenantId, UUID prescriptionId);
 
     PrescriptionResponseDto updatePrescriptionStatus(UUID tenantId, UUID prescriptionId, String newStatus);
+
+    PrescriptionResponseDto getPrescriptionByVisitId(UUID tenantId, UUID visitId);
 }

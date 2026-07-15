@@ -52,5 +52,11 @@ public class PrescriptionController {
         UUID tenantId = UUID.fromString(TenantContext.getTenantId());
         return ResponseEntity.ok(prescriptionService.updatePrescriptionStatus(tenantId, id, request.getStatus()));
     }
+
+    @GetMapping
+    public ResponseEntity<PrescriptionResponseDto> getPrescriptionByVisitId(@RequestParam UUID visitId) {
+        UUID tenantId = UUID.fromString(TenantContext.getTenantId());
+        return ResponseEntity.ok(prescriptionService.getPrescriptionByVisitId(tenantId, visitId));
+    }
 }
 

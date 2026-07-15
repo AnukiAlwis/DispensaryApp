@@ -204,12 +204,13 @@ Updates the payment status of a bill.
 ### List Bills by Patient
 **GET** `/bills`
 
-Lists bills for a specific patient.
+Lists bills for a specific patient or retrieves a bill by prescription ID.
 
 **Query Parameters:**
 - `patientId` (UUID, optional) - Patient ID to filter bills
+- `prescriptionId` (UUID, optional) - Prescription ID to lookup specific bill
 
-**Response:**
+**Response (when patientId provided):**
 ```json
 [
   {
@@ -231,8 +232,29 @@ Lists bills for a specific patient.
 ]
 ```
 
+**Response (when prescriptionId provided):**
+```json
+{
+  "id": "550e8400-e29b-41d4-a716-446655440000",
+  "visitId": "550e8400-e29b-41d4-a716-446655440001",
+  "patientId": "550e8400-e29b-41d4-a716-446655440002",
+  "doctorFee": 1500.00,
+  "doctorDiscountPct": 10,
+  "doctorFeeFinal": 1350.00,
+  "medicineTotal": 2500.00,
+  "pharmacyDiscountPct": 15,
+  "medicineTotalFinal": 2125.00,
+  "grandTotal": 3475.00,
+  "status": "PAID",
+  "createdAt": "2024-01-15T10:30:00",
+  "updatedAt": "2024-01-15T10:45:00",
+  "lineItems": []
+}
+```
+
 **Status Codes:**
 - `200` - Bills retrieved successfully
+- `404` - Bill not found (when using prescriptionId)
 
 ---
 
@@ -713,6 +735,33 @@ Updates the status of a prescription.
 - `200` - Status updated successfully
 - `404` - Prescription not found
 - `400` - Invalid status value
+
+---
+
+### Get Prescription by VisitId
+**GET** `/prescriptions`
+
+Retrieves prescription details by visit ID.
+
+**Query Parameters:**
+- `visitId` (UUID, required) - Visit ID to lookup prescription
+
+**Response:**
+```json
+{
+  "id": "550e8400-e29b-41d4-a716-446655440000",
+  "visitId": "550e8400-e29b-41d4-a716-446655440001",
+  "patientId": "550e8400-e29b-41d4-a716-446655440002",
+  "status": "ACTIVE",
+  "createdAt": "2024-01-15T10:00:00",
+  "updatedAt": "2024-01-15T10:00:00",
+  "items": []
+}
+```
+
+**Status Codes:**
+- `200` - Prescription retrieved successfully
+- `404` - Prescription not found
 
 ---
 

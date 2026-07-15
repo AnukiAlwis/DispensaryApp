@@ -156,5 +156,16 @@ public class PrescriptionServiceImpl implements PrescriptionService {
         prescriptionRepository.save(prescription);
         return modelMapper.map(prescription, PrescriptionResponseDto.class);
     }
+
+    @Override
+    public PrescriptionResponseDto getPrescriptionByVisitId(UUID tenantId, UUID visitId) {
+        Prescription prescription = prescriptionRepository.findByVisitId(visitId)
+                .orElseThrow(() -> new NotFoundException("Prescription not found"));
+
+        if (!prescription.getTenant().getId().equals(tenantId))
+            throw new TenantMismatchException("Tenant mismatch");
+
+        return modelMapper.map(prescription, PrescriptionResponseDto.class);
+    }
 }
 

@@ -1,8 +1,8 @@
 ## 1. Backend: lookup prescription by visitId
 
-- [ ] 1.1 In `com.anucode.dispensary.services.PrescriptionService`, add method signature `PrescriptionResponseDto getPrescriptionByVisitId(UUID tenantId, UUID visitId);`.
-- [ ] 1.2 In `PrescriptionServiceImpl`, implement it using the existing `prescriptionRepository.findByVisitId(visitId)` (already exists, currently unused): throw `NotFoundException` if absent or tenant mismatch, otherwise map to `PrescriptionResponseDto` the same way `getPrescription` does.
-- [ ] 1.3 In `PrescriptionController`, add:
+- [x] 1.1 In `com.anucode.dispensary.services.PrescriptionService`, add method signature `PrescriptionResponseDto getPrescriptionByVisitId(UUID tenantId, UUID visitId);`.
+- [x] 1.2 In `PrescriptionServiceImpl`, implement it using the existing `prescriptionRepository.findByVisitId(visitId)` (already exists, currently unused): throw `NotFoundException` if absent or tenant mismatch, otherwise map to `PrescriptionResponseDto` the same way `getPrescription` does.
+- [x] 1.3 In `PrescriptionController`, add:
   ```java
   @GetMapping
   public ResponseEntity<PrescriptionResponseDto> getPrescriptionByVisitId(@RequestParam UUID visitId) {
@@ -13,10 +13,10 @@
 
 ## 2. Backend: lookup bill by prescriptionId
 
-- [ ] 2.1 In `com.anucode.dispensary.repos.BillRepository`, add `Optional<Bill> findByPrescription_Id(UUID prescriptionId);`.
-- [ ] 2.2 In `com.anucode.dispensary.services.BillService`, add method signature `BillResponseDto getBillByPrescriptionId(UUID tenantId, UUID prescriptionId);`.
-- [ ] 2.3 In `BillServiceImpl`, implement using `billRepository.findByPrescription_Id(prescriptionId)`: throw `NotFoundException` if absent, tenant-check same as `getBill`, then map to `BillResponseDto` the same way `getBill` does.
-- [ ] 2.4 In `BillController`, extend the existing `listByPatient` GET handler to also accept `prescriptionId`:
+- [x] 2.1 In `com.anucode.dispensary.repos.BillRepository`, add `Optional<Bill> findByPrescription_Id(UUID prescriptionId);`.
+- [x] 2.2 In `com.anucode.dispensary.services.BillService`, add method signature `BillResponseDto getBillByPrescriptionId(UUID tenantId, UUID prescriptionId);`.
+- [x] 2.3 In `BillServiceImpl`, implement using `billRepository.findByPrescription_Id(prescriptionId)`: throw `NotFoundException` if absent, tenant-check same as `getBill`, then map to `BillResponseDto` the same way `getBill` does.
+- [x] 2.4 In `BillController`, extend the existing `listByPatient` GET handler to also accept `prescriptionId`:
   ```java
   @GetMapping
   public ResponseEntity<?> listOrLookup(@RequestParam(required = false) UUID patientId,

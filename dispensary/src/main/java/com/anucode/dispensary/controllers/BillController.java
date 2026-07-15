@@ -66,10 +66,13 @@ public class BillController {
 
     // optional: list by patient; not used per previous note but implemented for completeness
     @GetMapping
-    public ResponseEntity<List<BillResponseDto>> listByPatient(@RequestParam(required = false) UUID patientId) {
+    public ResponseEntity<?> listOrLookup(@RequestParam(required = false) UUID patientId,
+                                          @RequestParam(required = false) UUID prescriptionId) {
         UUID tenantId = UUID.fromString(TenantContext.getTenantId());
+        if (prescriptionId != null) {
+            return ResponseEntity.ok(billService.getBillByPrescriptionId(tenantId, prescriptionId));
+        }
         if (patientId == null) {
-            // list all for tenant (not part of API list, but useful)
             return ResponseEntity.ok(List.of());
         }
         return ResponseEntity.ok(billService.listBillsByPatient(tenantId, patientId));

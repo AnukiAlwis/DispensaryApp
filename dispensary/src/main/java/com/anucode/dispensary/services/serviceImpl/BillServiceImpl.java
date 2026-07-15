@@ -331,6 +331,19 @@ public class BillServiceImpl implements BillService {
         }).filter(Objects::nonNull).collect(Collectors.toList());
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public BillResponseDto getBillByPrescriptionId(UUID tenantId, UUID prescriptionId) {
+        Bill bill = billRepository.findByPrescription_Id(prescriptionId)
+                .orElseThrow(() -> new NotFoundException("Bill not found"));
+
+        if (!bill.getTenant().getId().equals(tenantId)) {
+            throw new TenantMismatchException("Bill does not belong to tenant");
+        }
+
+        return getBill(tenantId, bill.getId());
+    }
+
 
     private void calculateAndPersist(Bill bill) {
         // 1. Re-fetch line items from DB to ensure you have latest data
