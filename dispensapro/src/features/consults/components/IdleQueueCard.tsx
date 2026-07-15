@@ -8,6 +8,7 @@ import {
   Typography,
   Badge,
 } from "@mui/material";
+import PlayArrowIcon from "@mui/icons-material/PlayArrow";
 import { queueService } from "../../Queues/services/QueueService";
 import { Queue } from "../../Queues/types";
 
@@ -140,7 +141,20 @@ export default function IdleQueueCard({
         <Button
           variant="contained"
           size="large"
+          startIcon={<PlayArrowIcon />}
           onClick={() => onStartConsultation(nextWaitingQueue)}
+          sx={{
+            px: 3,
+            py: 1.5,
+            fontSize: "1rem",
+            fontWeight: 600,
+            textTransform: "none",
+            boxShadow: 2,
+            "&:hover": {
+              boxShadow: 4,
+              transform: "translateY(-1px)",
+            },
+          }}
         >
           Start Consulting
         </Button>

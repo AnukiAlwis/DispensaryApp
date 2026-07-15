@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { Box, Button, Typography, Backdrop, CircularProgress } from "@mui/material";
+import SendIcon from "@mui/icons-material/Send";
 import { useSelector } from "react-redux";
 import { RootState } from "../../../store";
 import { queueService } from "../../Queues/services/QueueService";
@@ -7,6 +8,7 @@ import { patientService } from "../../patients/services/patientService";
 import { Queue } from "../../Queues/types";
 import { Patient } from "../../patients/types";
 import SectionCard from "../../../components/SectionCard";
+import PageHeader from "../../../components/PageHeader";
 import { Prescription, Bill, PrescriptionItem } from "../types";
 import { Visit } from "../../visits/types";
 import { useConsultation } from "../hooks/useConsultation";
@@ -23,7 +25,7 @@ import CompletionModal from "../components/CompletionModal";
 
 export default function ConsultsPage() {
   const user = useSelector((state: RootState) => state.user.userDetails);
-  const doctorId = "7c67c4a6-2ca6-4909-8c90-95e86a0bd797";
+  const doctorId = "23dc7ab2-cd2d-43c3-a6c5-c26c692314af";
 
   const [status, setStatus] = useState<"idle" | "active" | "completed">("idle");
   const [currentQueue, setCurrentQueue] = useState<Queue | null>(null);
@@ -191,10 +193,11 @@ export default function ConsultsPage() {
   const isCascadeRunning = isInitiating || isFinalizing;
 
   return (
-    <Box sx={{ maxWidth: 1200, mx: "auto", p: 2 }}>
-      <Typography variant="h4" sx={{ mb: 3, fontWeight: 600 }}>
-        Doctor Consultation Workspace
-      </Typography>
+    <Box sx={{ p: 2 }}>
+      <PageHeader
+        title="Doctor Consultation Workspace"
+        subtitle="Review the patient queue, manage prescriptions, and complete consultations."
+      />
 
       {status === "idle" && (
         <IdleQueueCard
@@ -242,13 +245,15 @@ export default function ConsultsPage() {
           )}
 
           {currentBill && (
-            <BillingSection
-              key={billingResetKey}
-              billId={currentBill.id}
-              hasPrescriptionItems={prescriptionItems.length > 0}
-              disabled={isCascadeRunning}
-              onCalculate={handleCalculate}
-            />
+            <SectionCard title="Billing & Discounts">
+              <BillingSection
+                key={billingResetKey}
+                billId={currentBill.id}
+                hasPrescriptionItems={prescriptionItems.length > 0}
+                disabled={isCascadeRunning}
+                onCalculate={handleCalculate}
+              />
+            </SectionCard>
           )}
 
           <Box sx={{ textAlign: "center", mt: 3 }}>
@@ -256,8 +261,24 @@ export default function ConsultsPage() {
               variant="contained"
               size="large"
               color="success"
+              startIcon={<SendIcon />}
               onClick={handleComplete}
               disabled={isCascadeRunning || !currentPrescription || !currentBill}
+              sx={{
+                px: 4,
+                py: 1.5,
+                fontSize: "1rem",
+                fontWeight: 600,
+                textTransform: "none",
+                boxShadow: 2,
+                "&:hover": {
+                  boxShadow: 4,
+                  transform: "translateY(-1px)",
+                },
+                "&:disabled": {
+                  boxShadow: 0,
+                },
+              }}
             >
               Complete Consultation & Send Prescription
             </Button>
@@ -265,10 +286,11 @@ export default function ConsultsPage() {
         </>
       )}
 
-      {showCompletionModal && currentQueue && (
+      {showCompletionModal && currentQueue && currentPatient && (
         <CompletionModal
           open={showCompletionModal}
           queueNumber={currentQueue.queueNumber}
+          patientName={`${currentPatient.firstName} ${currentPatient.lastName}`}
           onClose={handleCloseCompletion}
         />
       )}

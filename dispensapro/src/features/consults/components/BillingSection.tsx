@@ -5,7 +5,6 @@ import {
   TextField,
   Typography,
   Grid,
-  Paper,
 } from "@mui/material";
 import CalculateIcon from "@mui/icons-material/Calculate";
 
@@ -77,11 +76,7 @@ export default function BillingSection({
   };
 
   return (
-    <Paper variant="outlined" sx={{ p: 3, mb: 3, borderRadius: 2 }}>
-      <Typography variant="h6" sx={{ fontSize: "1.05rem", mb: 2 }}>
-        Billing & Discounts
-      </Typography>
-
+    <>
       {!calculated ? (
         <Box textAlign="center" py={3}>
           <Typography color="text.secondary" sx={{ mb: 2 }}>
@@ -93,6 +88,21 @@ export default function BillingSection({
             startIcon={<CalculateIcon />}
             onClick={handleCalculate}
             disabled={disabled || isCalculating || !hasPrescriptionItems}
+            sx={{
+              px: 3,
+              py: 1.2,
+              fontSize: "0.95rem",
+              fontWeight: 500,
+              textTransform: "none",
+              boxShadow: 1,
+              "&:hover": {
+                boxShadow: 2,
+                transform: "translateY(-1px)",
+              },
+              "&:disabled": {
+                boxShadow: 0,
+              },
+            }}
           >
             {isCalculating ? "Calculating..." : "Confirm Prescription & Calculate Bill"}
           </Button>
@@ -157,12 +167,30 @@ export default function BillingSection({
               onClick={reset}
               disabled={disabled}
               size="small"
+              sx={{
+                px: 2.5,
+                py: 1,
+                fontSize: "0.875rem",
+                fontWeight: 500,
+                textTransform: "none",
+                borderColor: "primary.main",
+                color: "primary.main",
+                "&:hover": {
+                  borderColor: "primary.dark",
+                  backgroundColor: "primary.50",
+                  transform: "translateY(-1px)",
+                },
+                "&:disabled": {
+                  borderColor: "action.disabled",
+                  color: "action.disabled",
+                },
+              }}
             >
               Recalculate
             </Button>
           </Grid>
         </Grid>
       )}
-    </Paper>
+    </>
   );
 }

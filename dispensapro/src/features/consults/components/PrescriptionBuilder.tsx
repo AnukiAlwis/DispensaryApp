@@ -61,10 +61,7 @@ export default function PrescriptionBuilder({
   };
 
   return (
-    <Box sx={{ mb: 3 }}>
-      <Typography variant="h6" sx={{ fontSize: "1.05rem", mb: 2 }}>
-        Prescription Builder
-      </Typography>
+    <Box>
       <MedicineAutocomplete onSelect={handleMedicineSelect} disabled={disabled} />
 
       {draftMedicine && (

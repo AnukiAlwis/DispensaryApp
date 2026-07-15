@@ -10,6 +10,7 @@ import {
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import DataTable from "../../../components/DataTable";
+import StatusChip from "../../../components/StatusChip";
 import { Visit } from "../../visits/types";
 
 interface PastVisitsAccordionProps {
@@ -45,7 +46,7 @@ export default function PastVisitsAccordion({
     {
       id: "status",
       label: "Status",
-      render: (row: Visit) => row.status,
+      render: (row: Visit) => <StatusChip status={row.status} />,
     },
     {
       id: "notes",
@@ -82,11 +83,10 @@ export default function PastVisitsAccordion({
     <Accordion
       expanded={expanded}
       onChange={(_, isExpanded) => setExpanded(isExpanded)}
-      sx={{ mb: 3 }}
     >
       <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-        <Typography variant="h6" sx={{ fontSize: "1.05rem" }}>
-          Past Visits ({visits.length})
+        <Typography variant="body2" color="text.secondary">
+          {visits.length} visits
         </Typography>
       </AccordionSummary>
       <AccordionDetails>
@@ -96,7 +96,11 @@ export default function PastVisitsAccordion({
           </Typography>
         ) : (
           <>
-            <DataTable columns={columns} rows={visibleVisits} />
+            <DataTable
+              columns={columns}
+              rows={visibleVisits}
+              emptyText="No previous visits to display"
+            />
             {canShowMore && (
               <Box sx={{ mt: 2, textAlign: "center" }}>
                 <Button
