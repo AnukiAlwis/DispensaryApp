@@ -208,9 +208,23 @@ export default function BillingModal({
                 <Typography variant="h6" gutterBottom sx={{ fontWeight: "bold" }}>
                   Doctor Notes
                 </Typography>
-                <Typography variant="body1" sx={{ fontStyle: "italic" }}>
-                  No notes available
-                </Typography>
+                {visit?.notes && visit.notes.length > 0 ? (
+                  visit.notes.map((note) => (
+                    <Box key={note.id} sx={{ mb: 1 }}>
+                      <Typography variant="body2" sx={{ fontWeight: 600, display: "inline" }}>
+                        {note.recordedByUsername}
+                        {note.recordedByRole && ` (${note.recordedByRole})`}:
+                      </Typography>{" "}
+                      <Typography variant="body1" sx={{ display: "inline" }}>
+                        {note.note}
+                      </Typography>
+                    </Box>
+                  ))
+                ) : (
+                  <Typography variant="body1" sx={{ fontStyle: "italic" }}>
+                    No notes available
+                  </Typography>
+                )}
               </Box>
 
               {/* Section 2: Printable Bill */}
@@ -243,10 +257,7 @@ export default function BillingModal({
                     <TableHead>
                       <TableRow>
                         <TableCell>Medicine</TableCell>
-                        <TableCell>Strength</TableCell>
-                        <TableCell>Dose</TableCell>
-                        <TableCell>Frequency</TableCell>
-                        <TableCell align="right">Price</TableCell>
+                        <TableCell align="right">Price/Unit</TableCell>
                         <TableCell align="right">Qty</TableCell>
                         <TableCell align="right">Total</TableCell>
                       </TableRow>
@@ -256,9 +267,6 @@ export default function BillingModal({
                         bill.lineItems.map((item, index) => (
                           <TableRow key={index}>
                             <TableCell>{item.medicineName}</TableCell>
-                            <TableCell>{item.strength}</TableCell>
-                            <TableCell>{item.dose}</TableCell>
-                            <TableCell>{item.frequency}</TableCell>
                             <TableCell align="right">{formatCurrency(item.unitPrice)}</TableCell>
                             <TableCell align="right">{item.qty}</TableCell>
                             <TableCell align="right">{formatCurrency(item.totalPrice)}</TableCell>
@@ -266,7 +274,7 @@ export default function BillingModal({
                         ))
                       ) : (
                         <TableRow>
-                          <TableCell colSpan={7} align="center">
+                          <TableCell colSpan={4} align="center">
                             No medicine items found
                           </TableCell>
                         </TableRow>
