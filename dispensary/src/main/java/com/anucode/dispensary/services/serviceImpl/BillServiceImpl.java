@@ -195,14 +195,28 @@ public class BillServiceImpl implements BillService {
         dto.setPatientId(bill.getPatient() != null ? bill.getPatient().getId() : null);
         dto.setStatus(bill.getStatus().name());
 
+        // Load prescription items to get dose/frequency per medicine
+        List<PrescriptionItem> prescriptionItems = prescriptionItemRepository.findByPrescriptionId(bill.getPrescription().getId());
+        Map<UUID, PrescriptionItem> medIdToPrescriptionItem = prescriptionItems.stream()
+                .collect(Collectors.toMap(pi -> pi.getMedicine().getId(), pi -> pi, (a, b) -> a));
+
         List<BillLineItem> items = billLineItemRepository.findByBillId(bill.getId());
         List<BillLineItemDto> itemDtos = items.stream().map(it -> {
             BillLineItemDto li = new BillLineItemDto();
             li.setMedicineId(it.getMedicine() != null ? it.getMedicine().getId() : null);
             li.setMedicineName(it.getMedicine() != null ? it.getMedicine().getName() : null);
+            li.setStrength(it.getMedicine() != null ? it.getMedicine().getStrength() : null);
             li.setQty(it.getQty());
             li.setUnitPrice(it.getUnitPrice());
             li.setTotalPrice(it.getLineTotal());
+            // Populate dose/frequency from the matching prescription item
+            if (it.getMedicine() != null) {
+                PrescriptionItem pi = medIdToPrescriptionItem.get(it.getMedicine().getId());
+                if (pi != null) {
+                    li.setDose(pi.getDosage());
+                    li.setFrequency(pi.getFrequency());
+                }
+            }
             return li;
         }).collect(Collectors.toList());
 

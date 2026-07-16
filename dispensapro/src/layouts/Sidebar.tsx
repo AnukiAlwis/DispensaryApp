@@ -15,7 +15,6 @@ import LocalPharmacyIcon from "@mui/icons-material/LocalPharmacy";
 import AssignmentIcon from "@mui/icons-material/Assignment";
 import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-import AddIcon from "@mui/icons-material/Add";
 import FrontHandIcon from "@mui/icons-material/FrontHand";
 import { Link, useLocation } from "react-router-dom";
 import { useState } from "react";
@@ -52,6 +51,7 @@ export default function Sidebar({ isMobile, open, onToggle }: SidebarProps) {
         { label: "Supply Management", path: "/pharmacy/supply" },
       ],
     },
+    { label: "Dispense & Billing", path: "/dispensing", icon: <LocalPharmacyIcon /> },
     { label: "Consults", path: "/consults", icon: <AssignmentIcon /> },
   ];
 
@@ -214,12 +214,14 @@ export default function Sidebar({ isMobile, open, onToggle }: SidebarProps) {
         </Button>
         <Button
           variant="contained"
-          className="sidebar-btn book-btn"
+          className="sidebar-btn LocalPharmacy-btn"
           fullWidth
-          startIcon={<AddIcon />}
+          startIcon={<LocalPharmacyIcon />}
+          component={Link}
+          to="/dispensing"
           sx={{ my: 0.6, bgcolor: "#0F766E", "&:hover": { bgcolor: "#115E59" } }}
         >
-          Book Appointment
+          Dispense
         </Button>
       </Box>
 

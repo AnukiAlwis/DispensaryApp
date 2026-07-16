@@ -41,4 +41,9 @@ export const billingService = {
     const response = await apiClient.get<Bill>(BASE_URL, { params: { prescriptionId } });
     return response.data;
   },
+
+  updateStatus: async (billId: string, status: "DUE" | "PAID" | "VOID"): Promise<Bill> => {
+    const response = await apiClient.put<Bill>(`${BASE_URL}/${billId}/status`, { status });
+    return response.data;
+  },
 };

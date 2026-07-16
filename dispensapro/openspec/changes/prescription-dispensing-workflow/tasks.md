@@ -16,16 +16,16 @@
 
 > **Visual Compliance Requirement**: All UI implementations MUST closely match the reference images in `doc/stories/dispense&BillStory-images.png`. This includes exact colors, spacing, font sizes, button styles, and overall proportions for the Prescription Dispensing page, Medicine Preparation modal, and Billing modal. Refer to the image for precise layout details before implementing each component.
 
-- [ ] 2.0 Extend existing `features/consults/services/billingService.ts` with an `updateStatus(billId, status)` method calling `PUT /bills/{id}/status` (currently missing on the frontend though the backend endpoint exists); `getByPrescriptionId` and `calculate` already exist and require no changes
+- [x] 2.0 Extend existing `features/consults/services/billingService.ts` with an `updateStatus(billId, status)` method calling `PUT /bills/{id}/status` (currently missing on the frontend though the backend endpoint exists); `getByPrescriptionId` and `calculate` already exist and require no changes
 
-- [ ] 2.1 Create `dispensing/types.ts` with TypeScript interfaces: `CurrentServingPrescription` (id, patientName, patientPhone, doctorName, issuedAt, waitingTime), `UpNextPrescription` (same fields), `DispensingMedicine` (id, medicineName, strength, dose, frequency, quantity, currentStock, status: `"NOT_STARTED"|"STARTED"|"READY_TO_DISPENSE"`), and `PreparationState` (prescriptionId, medicineStatuses: Record<medicineId, status>). Create `dispensing/services/dispensingService.ts` with methods: `getCurrentServing()`, `getUpNext()`, `getPrescriptionMedicines(id)`, `updatePrescriptionStatus(id, status)` calling the backend endpoints
+- [x] 2.1 Create `dispensing/types.ts` with TypeScript interfaces: `CurrentServingPrescription` (id, patientName, patientPhone, doctorName, issuedAt, waitingTime), `UpNextPrescription` (same fields), `DispensingMedicine` (id, medicineName, strength, dose, frequency, quantity, currentStock, status: `"NOT_STARTED"|"STARTED"|"READY_TO_DISPENSE"`), and `PreparationState` (prescriptionId, medicineStatuses: Record<medicineId, status>). Create `dispensing/services/dispensingService.ts` with methods: `getCurrentServing()`, `getUpNext()`, `getPrescriptionMedicines(id)`, `updatePrescriptionStatus(id, status)` calling the backend endpoints
 
-- [ ] 2.2 Create `PrescriptionDispensingPage` component with exact layout matching reference image:
+- [x] 2.2 Create `PrescriptionDispensingPage` component with exact layout matching reference image:
   - **Section 1 - Currently Serving Card**: Highlighted card displaying Patient Name, Phone Number, Doctor, Issued Date & Time (format: `YYYY-MM-DD HH:mm`), and Waiting Time (calculate as `now - updatedAt`, display in minutes if < 60 mins, else hours + minutes). Action button shows "💊 Start Preparing" if no preparation state exists, else "Continue Dispense". Card should be visually distinct/prominent (refer to image for styling)
   - **Section 2 - Up Next Table**: Data table with columns: Patient Name, Phone Number, Doctor, Issued Date & Time, Actions. Actions column contains two buttons: "View Prescription" (opens read-only modal) and "Dispense Now" (disabled if any preparation state exists in sessionStorage). Table should display all remaining ISSUED prescriptions for today, sorted oldest first
   - **Polling/Refetch**: On component mount, fetch current-serving and up-next. After DONE button is clicked, refetch both to load next patient. Use polling or manual refresh as appropriate (refer to existing patterns in codebase)
 
-- [ ] 2.3 Implement `MedicinePreparationModal` component with exact layout matching reference image:
+- [x] 2.3 Implement `MedicinePreparationModal` component with exact layout matching reference image:
   - **Header**: Modal title "Medicine Preparation" with prescription patient name and ID
   - **Medicine Table**: Columns: Medicine, Strength, Dose, Frequency, Quantity, Status. Rows are pre-sorted by backend (frequency desc, quantity desc). Each row displays medicine details read-only
   - **Status Button**: Each row has a clickable status button that cycles: NOT_STARTED → STARTED → READY_TO_DISPENSE → NOT_STARTED. Button styling: Grey background for NOT_STARTED, Yellow/Orange for STARTED, Green for READY_TO_DISPENSE (refer to image for exact color values)
@@ -33,7 +33,7 @@
   - **Stock Display**: Show current available stock quantity alongside prescribed quantity for validation context
   - **Error Display**: If backend returns InsufficientStockException, display error message in modal showing which medicines are short and required vs available quantities
 
-- [ ] 2.4 Implement `BillingModal` component with three-section layout matching reference image:
+- [x] 2.4 Implement `BillingModal` component with three-section layout matching reference image:
   - **Section 1 - Patient Details**: Display Patient Information (name, phone, age, gender), Visit Information (visit date, visit ID), and Doctor Notes. Doctor Notes are read-only text. If notes are very long (> 200 chars), truncate with "..." and show full text on hover or click (tooltip or expandable section)
   - **Section 2 - Printable Bill**: Invoice-style layout displaying:
     - Header: Bill ID, Date, Patient Name
@@ -43,40 +43,40 @@
   - **Section 3 - Receive Payment**: Display Total Amount Due (read-only, from bill.grandTotal), Amount Received (editable number input), and Calculated Change (computed as Amount Received - Grand Total, read-only). Format all currency values as "Rs. X,XXX.XX"
   - **Footer Buttons**: Three buttons at bottom: BACK (white background, returns to preparation modal), PRINT (orange background, triggers print), DONE (primary blue background, completes workflow)
 
-- [ ] 2.5 Create sessionStorage utility (`dispensing/utils/preparationStorage.ts`) following `sessionStoragePersist.ts` pattern with typed load/save with try/catch. Storage key: `dispensing_preparation_state`. Structure: `{ prescriptionId: string, medicineStatuses: Record<medicineId, status> }`. Methods: `loadState()`, `saveState(state)`, `clearState()`, `hasActiveSession()`
+- [x] 2.5 Create sessionStorage utility (`dispensing/utils/preparationStorage.ts`) following `sessionStoragePersist.ts` pattern with typed load/save with try/catch. Storage key: `dispensing_preparation_state`. Structure: `{ prescriptionId: string, medicineStatuses: Record<medicineId, status> }`. Methods: `loadState()`, `saveState(state)`, `clearState()`, `hasActiveSession()`
 
-- [ ] 2.6 Implement preparation status cycling logic in MedicinePreparationModal: on status button click, cycle through NOT_STARTED → STARTED → READY_TO_DISPENSE → NOT_STARTED. Update sessionStorage after each status change. On modal open, load existing state from sessionStorage if exists for current prescriptionId
+- [x] 2.6 Implement preparation status cycling logic in MedicinePreparationModal: on status button click, cycle through NOT_STARTED → STARTED → READY_TO_DISPENSE → NOT_STARTED. Update sessionStorage after each status change. On modal open, load existing state from sessionStorage if exists for current prescriptionId
 
-- [ ] 2.7 Add status button styling with exact colors matching reference image:
+- [x] 2.7 Add status button styling with exact colors matching reference image:
   - NOT_STARTED: Grey background (e.g., `#e0e0e0` or MUI grey), text "Not Started"
   - STARTED: Yellow/Orange background (e.g., `#ff9800` or MUI orange), text "Started"
   - READY_TO_DISPENSE: Green background (e.g., `#4caf50` or MUI green), text "Ready to Dispense"
   - Button should have hover state (slightly darken) and active state (press effect)
   - Refer to reference image for exact color values and button dimensions
 
-- [ ] 2.8 Implement DISPENSE button enablement logic: button is disabled unless `Object.values(medicineStatuses).every(status => status === 'READY_TO_DISPENSE')`. Re-check this condition on every status change. Disable button during API call (show loading state)
+- [x] 2.8 Implement DISPENSE button enablement logic: button is disabled unless `Object.values(medicineStatuses).every(status => status === 'READY_TO_DISPENSE')`. Re-check this condition on every status change. Disable button during API call (show loading state)
 
-- [ ] 2.9 Implement single active session enforcement: on page load and during preparation modal open, check `preparationStorage.hasActiveSession()`. If true, disable all "Dispense Now" buttons in Up Next table. Only re-enable after DONE button clears sessionStorage. This enforces one-patient-at-a-time rule
+- [x] 2.9 Implement single active session enforcement: on page load and during preparation modal open, check `preparationStorage.hasActiveSession()`. If true, disable all "Dispense Now" buttons in Up Next table. Only re-enable after DONE button clears sessionStorage. This enforces one-patient-at-a-time rule
 
-- [ ] 2.10 On DISPENSE button click: (a) call `PUT /prescriptions/{id}/status` with `{status: "DISPENSED"}`, (b) on success, call `billingService.calculate(billId)` to refresh totals from newly created Dispense rows, (c) open BillingModal with refreshed Bill data, (d) transition state machine from `preparing` to `billing`. Handle InsufficientStockException by showing error in preparation modal and not transitioning
+- [x] 2.10 On DISPENSE button click: (a) call `PUT /prescriptions/{id}/status` with `{status: "DISPENSED"}`, (b) on success, call `billingService.calculate(billId)` to refresh totals from newly created Dispense rows, (c) open BillingModal with refreshed Bill data, (d) transition state machine from `preparing` to `billing`. Handle InsufficientStockException by showing error in preparation modal and not transitioning
 
-- [ ] 2.11 Implement payment calculation logic in BillingModal: Amount Received is local component state (editable number input). Change is computed as `Amount Received - bill.grandTotal`. Display Change as read-only. Format as currency "Rs. X,XXX.XX". Handle negative values (if Amount Received < Grand Total) by showing error or warning. This state is NOT persisted to sessionStorage
+- [x] 2.11 Implement payment calculation logic in BillingModal: Amount Received is local component state (editable number input). Change is computed as `Amount Received - bill.grandTotal`. Display Change as read-only. Format as currency "Rs. X,XXX.XX". Handle negative values (if Amount Received < Grand Total) by showing error or warning. This state is NOT persisted to sessionStorage
 
-- [ ] 2.12 Add View Prescription read-only modal component: reuse existing prescription/medicine fetch APIs. Display prescription details (patient, doctor, medicines with dose/frequency/quantity) in a read-only format. No dispense or billing actions. No status buttons. Close button only. Modal should be clean and informational (refer to reference image for layout)
+- [x] 2.12 Add View Prescription read-only modal component: reuse existing prescription/medicine fetch APIs. Display prescription details (patient, doctor, medicines with dose/frequency/quantity) in a read-only format. No dispense or billing actions. No status buttons. Close button only. Modal should be clean and informational (refer to reference image for layout)
 
-- [ ] 2.13 Implement waiting time calculation and display: for current-serving prescription, calculate `waitingTime = now - prescription.updatedAt`. Display as "X min" if < 60 minutes, else "X hr Y min". Update this display every 30 seconds or on page refresh. Position in Currently Serving card as shown in reference image
+- [x] 2.13 Implement waiting time calculation and display: for current-serving prescription, calculate `waitingTime = now - prescription.updatedAt`. Display as "X min" if < 60 minutes, else "X hr Y min". Update this display every 30 seconds or on page refresh. Position in Currently Serving card as shown in reference image
 
-- [ ] 2.14 Add print functionality using browser's native `window.print()` with CSS `@media print` rules: scope print styles to the bill container only (Section 2 of BillingModal). Hide other page elements (navigation, Currently Serving card, Up Next table, modal chrome). Ensure bill layout prints cleanly on A4 paper with proper margins. Add a "Print" button in BillingModal footer (orange background per reference image)
+- [x] 2.14 Add print functionality using browser's native `window.print()` with CSS `@media print` rules: scope print styles to the bill container only (Section 2 of BillingModal). Hide other page elements (navigation, Currently Serving card, Up Next table, modal chrome). Ensure bill layout prints cleanly on A4 paper with proper margins. Add a "Print" button in BillingModal footer (orange background per reference image)
 
-- [ ] 2.15 Add routing for Prescription Dispensing page: check existing route setup in `App.tsx` or router file. Add route for pharmacist role (e.g., `/dispensing` or `/pharmacy/dispensing`). Add navigation link in main nav if appropriate for pharmacist users. Follow existing route patterns for role-based access
+- [x] 2.15 Add routing for Prescription Dispensing page: check existing route setup in `App.tsx` or router file. Add route for pharmacist role (e.g., `/dispensing` or `/pharmacy/dispensing`). Add navigation link in main nav if appropriate for pharmacist users. Follow existing route patterns for role-based access
 
-- [ ] 2.16 Implement navigation between preparation modal and billing modal using single parent state machine: states are `idle` → `preparing` → `billing` → `idle`. On "Start Preparing" or "Continue Dispense", transition to `preparing` and open MedicinePreparationModal. On successful DISPENSE, transition to `billing` and open BillingModal. State transitions should be clean and prevent invalid state jumps
+- [x] 2.16 Implement navigation between preparation modal and billing modal using single parent state machine: states are `idle` → `preparing` → `billing` → `idle`. On "Start Preparing" or "Continue Dispense", transition to `preparing` and open MedicinePreparationModal. On successful DISPENSE, transition to `billing` and open BillingModal. State transitions should be clean and prevent invalid state jumps
 
-- [ ] 2.17 Add BACK button functionality in BillingModal: when clicked, transition state machine from `billing` back to `preparing`, close BillingModal, reopen MedicinePreparationModal with all preparation statuses unchanged (preserved in sessionStorage). This allows pharmacist to correct mistakes before finalizing
+- [x] 2.17 Add BACK button functionality in BillingModal: when clicked, transition state machine from `billing` back to `preparing`, close BillingModal, reopen MedicinePreparationModal with all preparation statuses unchanged (preserved in sessionStorage). This allows pharmacist to correct mistakes before finalizing
 
-- [ ] 2.18 Implement DONE button in BillingModal: when clicked, (a) call `PUT /bills/{id}/status` with `{status: "PAID"}` if not already confirmed, (b) close BillingModal, (c) call `preparationStorage.clearState()` to remove preparation state, (d) refetch current-serving and up-next to load next patient, (e) transition state machine to `idle`, (f) re-enable all Dispense Now buttons. Show success message or toast
+- [x] 2.18 Implement DONE button in BillingModal: when clicked, (a) call `PUT /bills/{id}/status` with `{status: "PAID"}` if not already confirmed, (b) close BillingModal, (c) call `preparationStorage.clearState()` to remove preparation state, (d) refetch current-serving and up-next to load next patient, (e) transition state machine to `idle`, (f) re-enable all Dispense Now buttons. Show success message or toast
 
-- [ ] 2.19 Add comprehensive error handling for backend API failures:
+- [x] 2.19 Add comprehensive error handling for backend API failures:
   - Network errors: show user-friendly error message with retry option
   - InsufficientStockException from complete-dispense: display in MedicinePreparationModal showing which medicines are short (e.g., "Only 21 tablets available. Required: 30 tablets. Dispensing cannot continue.")
   - Validation errors (400): display specific field validation messages

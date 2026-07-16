@@ -8,6 +8,7 @@ import ConsultsPage from "../src/features/consults/pages/ConsultsPage";
 import MedicineManagementPage from "./features/pharmacy/pages/MedicineManagementPage";
 import DistributorsPage from "./features/pharmacy/pages/DistributorsPage";
 import SupplyManagementPage from "./features/pharmacy/pages/SupplyManagementPage";
+import PrescriptionDispensingPage from "./features/dispensing/pages/PrescriptionDispensingPage";
 
 // Future: add standalone public routes (login, landing, etc.)
 
@@ -20,6 +21,7 @@ export const router = createBrowserRouter([
       { path: "patients", element: <PatientsPage /> },
       { path: "visits", element: <VisitsPage /> },
       { path: "consults", element: <ConsultsPage /> },
+      { path: "dispensing", element: <PrescriptionDispensingPage /> },
 
       { path: "pharmacy/medicine", element: <MedicineManagementPage /> },
       { path: "pharmacy/distributors", element: <DistributorsPage /> },

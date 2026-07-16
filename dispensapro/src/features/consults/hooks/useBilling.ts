@@ -44,7 +44,7 @@ export const useBilling = (): UseBillingResult => {
       const result = await billingService.calculate(billId);
       setDoctorFee(result.doctorFee ?? 0);
       setMedicineTotal(result.medicineTotal ?? 0);
-      setTotalAmount(result.totalAmount ?? result.grandTotal ?? 0);
+      setTotalAmount(result.grandTotal ?? result.totalAmount ?? 0);
       return result;
     } catch (err: any) {
       setError(err.message || "Failed to calculate bill");

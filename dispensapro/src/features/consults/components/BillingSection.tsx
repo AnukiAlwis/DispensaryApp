@@ -15,7 +15,7 @@ interface BillingSectionProps {
   onCalculate?: () => Promise<{
     doctorFee: number;
     medicineTotal: number;
-    totalAmount: number;
+    grandTotal: number;
   } | null>;
   doctorDiscountPct: number;
   pharmacyDiscountPct: number;
@@ -51,7 +51,7 @@ export default function BillingSection({
     if (result) {
       setDoctorFee(result.doctorFee);
       setMedicineTotal(result.medicineTotal);
-      setTotalAmount(result.totalAmount);
+      setTotalAmount(result.grandTotal);
       setCalculated(true);
     }
   };

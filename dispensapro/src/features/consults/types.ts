@@ -52,18 +52,32 @@ export interface PrescriptionItemRequestDto {
   qtyPrescribed: number;
 }
 
+export interface BillLineItem {
+  medicineId: string;
+  medicineName: string;
+  strength: string;
+  dose: string;
+  frequency: string;
+  qty: number;
+  unitPrice: number;
+  totalPrice: number;
+}
+
 export interface Bill {
   id: string;
   visitId: string;
   patientId: string;
   doctorFee: number;
+  doctorDiscountPct: number | null;
+  doctorFeeFinal: number;
   medicineTotal: number;
-  doctorDiscountPct: number;
-  pharmacyDiscountPct: number;
-  totalAmount: number;
+  pharmacyDiscountPct: number | null;
+  medicineTotalFinal: number;
+  grandTotal: number;
   status: "DUE" | "PAID" | "VOID";
   createdAt: string;
   updatedAt: string;
+  lineItems: BillLineItem[];
 }
 
 export interface BillRequestDto {
@@ -75,8 +89,8 @@ export interface BillCalculateResponseDto {
   id: string;
   doctorFee: number;
   medicineTotal: number;
-  totalAmount: number;
-  grandTotal?: number;
+  grandTotal: number;
+  totalAmount?: number;
 }
 
 export interface BillDiscountsRequestDto {
