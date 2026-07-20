@@ -9,6 +9,7 @@ import {
   Button,
   Collapse,
   Typography,
+  Divider,
 } from "@mui/material";
 import PeopleIcon from "@mui/icons-material/People";
 import LocalPharmacyIcon from "@mui/icons-material/LocalPharmacy";
@@ -58,14 +59,16 @@ export default function Sidebar({ isMobile, open, onToggle }: SidebarProps) {
   const drawerContent = (
     <Box className="sidebar-container" sx={{ bgcolor: SIDEBAR_BG, color: SIDEBAR_TEXT }}>
       {/* Logo / Title */}
-      <Toolbar className="sidebar-toolbar" sx={{ minHeight: 64, px: 2, justifyContent: "flex-start" }}>
-        <Box display="flex" alignItems="center" gap={1.5}>
-          <img src="/logo192.png" alt="App Logo" className="sidebar-logo" />
+      <Toolbar className="sidebar-toolbar" sx={{ minHeight: 100, px: 10, pt:2, pb:2, justifyContent: "center", borderTop: "1px solid rgba(255, 255, 255, 0.1)", borderBottom: "1px solid rgba(255, 255, 255, 0.1)" }}>
+        <Box display="flex" flexDirection="column" alignItems="center" gap={1}>
+          <img src="/DispensaProLogo.png" alt="App Logo" className="sidebar-logo"  height={120}/>
           <Typography variant="h6" sx={{ fontWeight: 700, color: "#fff", fontSize: "1.1rem" }}>
-            MediCare
+            DispensaPRO
           </Typography>
         </Box>
       </Toolbar>
+
+      <Divider sx={{ borderColor: "rgba(255, 255, 255, 0.1)" }} />
 
       <Box sx={{ px: 2, py: 1 }}>
         <Typography variant="caption" sx={{ color: "#64748B", fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", fontSize: "0.65rem" }}>
@@ -131,7 +134,6 @@ export default function Sidebar({ isMobile, open, onToggle }: SidebarProps) {
                 <ListItemButton
                   onClick={handleTogglePharmacy}
                   sx={{
-                    borderRadius: "10px",
                     py: 1,
                     px: 1.5,
                     transition: "all 0.2s ease",
@@ -171,7 +173,6 @@ export default function Sidebar({ isMobile, open, onToggle }: SidebarProps) {
                           sx={{
                             pl: 5.5,
                             py: 0.8,
-                            borderRadius: "8px",
                             mx: 1,
                             transition: "all 0.2s ease",
                             color: isActive ? SIDEBAR_ACTIVE_TEXT : SIDEBAR_TEXT,
@@ -244,6 +245,7 @@ export default function Sidebar({ isMobile, open, onToggle }: SidebarProps) {
             color: SIDEBAR_TEXT,
             boxShadow: "2px 0 16px rgba(0,0,0,0.25)",
             borderRight: "none",
+            borderRadius: 0,
           },
         }}
       >
@@ -268,6 +270,7 @@ export default function Sidebar({ isMobile, open, onToggle }: SidebarProps) {
           boxShadow: "2px 0 16px rgba(0,0,0,0.12)",
           transition: "width 0.3s ease",
           overflowX: "hidden",
+          borderRadius: 0,
         },
       }}
     >
