@@ -140,15 +140,15 @@ export default function CheckInDialog({ open, onClose }: CheckInDialogProps) {
 
   return (
     <Dialog open={open} onClose={handleClose} fullWidth maxWidth="md" PaperProps={{ sx: { overflow: "hidden" } }}>
-      <DialogTitle sx={{ px: 3, pt: 3, pb: 1, pr: 6, fontWeight: 700, fontSize: "1.15rem" }}>
+      <DialogTitle sx={{ px: 3, pt: 3, pr: 6, fontWeight: 700, fontSize: "1.15rem" }}>
         Patient Check-In
-        <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5, fontWeight: 400 }}>
+        <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 400 }}>
           Search and select a booked patient to confirm their arrival.
         </Typography>
       </DialogTitle>
-      <DialogContent sx={{ px: 3, py: 2 }}>
+      <DialogContent sx={{ px: 3, py: 2}}>
         {!success ? (
-          <Box display="flex" flexDirection="column" gap={2.5}>
+          <Box display="flex" flexDirection="column" gap={2.5} sx={{ pt:3}}>
             <Autocomplete
               options={options}
               getOptionLabel={optionLabel}
