@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { queueService } from "../../Queues/services/QueueService";
 import { visitService } from "../../visits/services/visitService";
 import { prescriptionService } from "../services/prescriptionService";
@@ -33,6 +34,7 @@ export const useConsultation = (): UseConsultationResult => {
   const [isFinalizing, setIsFinalizing] = useState(false);
   const [cascadeStep, setCascadeStep] = useState(0);
   const [error, setError] = useState<string | null>(null);
+  const queryClient = useQueryClient();
 
   const [lastInitiationParams, setLastInitiationParams] = useState<{
     queueId: string;
@@ -48,6 +50,28 @@ export const useConsultation = (): UseConsultationResult => {
     doctorDiscountPct: number;
     pharmacyDiscountPct: number;
   } | null>(null);
+
+  const startMutation = useMutation({
+    mutationFn: (queueId: string) => queueService.start(queueId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["summary", "today"] });
+    }
+  });
+
+  const serveMutation = useMutation({
+    mutationFn: (queueId: string) => queueService.serve(queueId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["summary", "today"] });
+    }
+  });
+
+  const updateDiscountsMutation = useMutation({
+    mutationFn: ({ billId, discounts }: { billId: string, discounts: { doctorDiscountPct: number, pharmacyDiscountPct: number } }) => 
+      billingService.updateDiscounts(billId, discounts),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["summary", "today"] });
+    }
+  });
 
   const initiateConsultation = async (
     queueId: string,
@@ -65,7 +89,7 @@ export const useConsultation = (): UseConsultationResult => {
 
     try {
       setCascadeStep(1);
-      const queue = await queueService.start(queueId);
+      const queue = await startMutation.mutateAsync(queueId);
 
       setCascadeStep(2);
       const visits = await visitService.getAllByPatientId(patientId);
@@ -134,9 +158,12 @@ export const useConsultation = (): UseConsultationResult => {
       await visitService.createNote(visitId, { note: clinicalNotes || "" });
 
       setCascadeStep(2);
-      await billingService.updateDiscounts(billId, {
-        doctorDiscountPct,
-        pharmacyDiscountPct,
+      await updateDiscountsMutation.mutateAsync({
+        billId,
+        discounts: {
+          doctorDiscountPct,
+          pharmacyDiscountPct,
+        }
       });
 
       setCascadeStep(3);
@@ -146,7 +173,7 @@ export const useConsultation = (): UseConsultationResult => {
       await prescriptionService.updateStatus(prescriptionId, "ISSUED");
 
       setCascadeStep(5);
-      await queueService.serve(queueId);
+      await serveMutation.mutateAsync(queueId);
 
       setCascadeStep(0);
       setIsFinalizing(false);

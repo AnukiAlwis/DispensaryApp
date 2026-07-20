@@ -23,4 +23,6 @@ public interface QueueEntryRepository extends JpaRepository<QueueEntry, UUID> {
            "LOWER(CONCAT(p.firstName, ' ', p.lastName)) LIKE LOWER(CONCAT('%', :searchTerm, '%')) OR " +
            "p.contact LIKE CONCAT('%', :searchTerm, '%'))")
     List<QueueEntry> searchByPatientNameOrPhone(UUID tenantId, LocalDate queueDate, String searchTerm);
+
+    long countByTenantIdAndDoctorIdAndQueueDateAndStatus(UUID tenantId, UUID doctorId, LocalDate queueDate, QueueEntry.Status status);
 }

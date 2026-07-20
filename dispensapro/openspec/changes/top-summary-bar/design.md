@@ -12,7 +12,7 @@ Key entity relationships for the summary:
 
 **Goals:**
 - Provide a single `GET /summary/today` endpoint returning per-doctor daily stats.
-- Return 4 metrics: patients waiting (CHECKED_IN_WAITING count), patients served (SERVED count), total income (SUM of grandTotal for PAID bills), total charity (SUM of discount amounts for all bills created today).
+- Return 4 metrics: patients waiting (CHECKED_IN_WAITING count), patients served (SERVED count), total income (SUM of grandTotal for PAID bills — net after discounts), total charity (SUM of discount amounts for PAID and DUE bills, excluding VOID).
 - Make the logged-in doctor's identity available in `TenantContext` via `X-User-ID` header.
 - Replace hardcoded values in `TopSummaryBar.tsx` with live API data.
 
@@ -40,13 +40,15 @@ Key entity relationships for the summary:
 **Alternative considered**: JWT token parsing — rejected as out of scope for MVP. Keycloak integration is future work.
 
 ### 3. Charity calculation: discount-based, computed from percentage fields (defensive)
-**Decision**: Total charity = `SUM((doctorFee * COALESCE(doctorDiscountPct, 0) / 100) + (medicineTotal * COALESCE(pharmacyDiscountPct, 0) / 100))` for all bills created today for this doctor, regardless of bill status.
+**Decision**: Total charity = `SUM((doctorFee * COALESCE(doctorDiscountPct, 0) / 100) + (medicineTotal * COALESCE(pharmacyDiscountPct, 0) / 100))` for all bills created today for this doctor, where `status != 'VOID'`. This includes both PAID and DUE bills — discounts/charity given are counted regardless of whether the bill has been paid yet. VOID (cancelled) bills are excluded because a cancelled bill's discounts are not real charity.
 
 **Rationale**: The backend has no explicit "charity" field. The discount amounts (`doctorDiscountPct` applied to `doctorFee`, `pharmacyDiscountPct` applied to `medicineTotal`) represent the concession/charity given. Computing from the raw percentage fields is **defensive** — it does not depend on `doctorFeeFinal` or `medicineTotalFinal` being up-to-date. The `doctorDiscountPct` and `pharmacyDiscountPct` fields are set directly by `updateDiscounts` and do not require `calculateBill` to have been called. This avoids the risk of stale `*Final` fields if the `calculate` API call fails or is skipped in the workflow (see Risk 3).
 
 **Alternative considered (rejected)**: `SUM((doctorFee - doctorFeeFinal) + (medicineTotal - medicineTotalFinal))` — this depends on `calculateBill` being called to populate `doctorFeeFinal` and `medicineTotalFinal`. If `calculate` fails silently (as it can in `PrescriptionDispensingPage.tsx` where the error is swallowed), the final fields remain stale and charity is underreported.
 
 **Alternative considered (rejected)**: Only count bills where `doctorDiscountPct = 100 AND pharmacyDiscountPct = 100` — too narrow; partial discounts are also charity.
+
+**Alternative considered (rejected)**: Include VOID bills — rejected because a VOID bill is a cancellation, not a real transaction. Discounts on cancelled bills do not represent actual charity given.
 
 **Calculation breakdown**:
 ```
@@ -61,10 +63,10 @@ If doctorDiscountPct is null → treated as 0 (COALESCE)
 If pharmacyDiscountPct is null → treated as 0 (COALESCE)
 ```
 
-### 4. Income: only PAID bills
-**Decision**: Total income = `SUM(grandTotal) WHERE status = 'PAID'` for bills created today for this doctor.
+### 4. Income: only PAID bills, net amount (after discounts)
+**Decision**: Total income = `SUM(grandTotal) WHERE status = 'PAID'` for bills created today for this doctor. `grandTotal` is the net amount (i.e., `doctorFeeFinal + medicineTotalFinal`, which already have discounts applied).
 
-**Rationale**: User explicitly confirmed only PAID bills count as income. DUE bills represent unbilled/pending revenue, not actual income.
+**Rationale**: User explicitly confirmed only PAID bills count as income. DUE bills represent unbilled/pending revenue, not actual income. `grandTotal` is the net amount after discounts have been applied — this is the actual money collected from the patient.
 
 ### 5. Date filtering: `created_at` for bills, `queue_date` for queue entries
 **Decision**: Bills filtered by `DATE(createdAt) = today`. Queue entries filtered by `queueDate = today`.
@@ -75,6 +77,32 @@ If pharmacyDiscountPct is null → treated as 0 (COALESCE)
 **Decision**: JPQL query joins through `b.prescription.doctor.id` to filter bills by doctor.
 
 **Rationale**: `Bill` has no direct `doctorId` column. The only path is `Bill → Prescription (OneToOne) → User (doctor, ManyToOne)`. JPQL handles this naturally.
+
+### 7. Frontend data refresh strategy: React Query Invalidation + Polling
+**Decision**: Use React Query's query invalidation for immediate updates on specific user actions, combined with 30-second polling as a safety net.
+
+**Rationale**: 
+- **Immediate feedback**: When a doctor performs an action (serve patient, mark bill paid), they expect to see the summary update instantly, not wait up to 30 seconds.
+- **Hybrid approach**: Polling (30s interval) catches changes from other sources (other users, background processes), while invalidation provides instant feedback on the current user's actions.
+- **Leverages existing infrastructure**: The frontend already uses React Query (`@tanstack/react-query`) for the `useSummary` hook. Invalidation is a built-in feature.
+- **Automatic deduplication**: React Query prevents duplicate fetches if polling and invalidation overlap.
+- **Clean separation**: Wrapping mutations in `useMutation` with `onSuccess` callbacks keeps invalidation logic co-located with the actions that trigger it.
+
+**Implementation pattern**:
+```typescript
+const serveMutation = useMutation({
+  mutationFn: (queueId: string) => queueService.serve(queueId),
+  onSuccess: () => {
+    queryClient.invalidateQueries({ queryKey: ["summary", "today"] });
+  }
+});
+```
+
+**Alternative considered (rejected)**: Direct refetch in components without React Query mutations — rejected because it requires manual state management, lacks automatic retry/error handling, and doesn't leverage React Query's deduplication capabilities.
+
+**Alternative considered (rejected)**: Event-driven pattern with custom event emitter — rejected as over-engineering for this use case. The coupling between queue/billing actions and summary updates is intentional and direct.
+
+**Alternative considered (rejected)**: Optimistic updates — rejected because queue and billing operations are relatively infrequent in a clinic setting (minutes between patients), so the complexity of rollback logic isn't justified.
 
 ## Risks / Trade-offs
 

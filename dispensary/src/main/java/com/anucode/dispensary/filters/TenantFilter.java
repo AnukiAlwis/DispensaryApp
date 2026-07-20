@@ -42,6 +42,12 @@ public class TenantFilter extends HttpFilter {
         // Set tenant in ThreadLocal
         TenantContext.setTenantId(tenantId);
 
+        // Set current user from X-User-ID header (MVP: header-based identity)
+        String userIdHeader = request.getHeader("X-User-ID");
+        if (userIdHeader != null && !userIdHeader.isEmpty()) {
+            TenantContext.setCurrentUser(UUID.fromString(userIdHeader));
+        }
+
         try {
             chain.doFilter(request, response);
         } finally {

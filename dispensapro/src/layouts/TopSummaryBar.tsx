@@ -4,6 +4,7 @@ import { ReactComponent as WaitingSVG } from "../assets/images/waitingPatients.s
 import { ReactComponent as ServedSVG } from "../assets/images/servedPatients.svg";
 import { ReactComponent as IncomeSVG } from "../assets/images/income.svg";
 import { ReactComponent as CharitySVG } from "../assets/images/charity.svg";
+import { useSummary } from "./useSummary";
 
 const IconWaiting = () => (
   <div className="icon-placeholder gold">
@@ -27,28 +28,32 @@ const IconCharity = () => (
 );
 
 const TopSummaryBar = () => {
+  const { data, isLoading } = useSummary();
+  const displayValue = (val: number | undefined) =>
+    isLoading ? "--" : (val ?? 0);
+
   const stats = [
     {
       label: "Patients Waiting",
-      value: 1,
+      value: displayValue(data?.patientsWaiting),
       icon: IconWaiting,
       className: "gold",
     },
     {
       label: "Patients Served",
-      value: 2,
+      value: displayValue(data?.patientsServed),
       icon: IconServed,
       className: "teal",
     },
     {
       label: "Total Income",
-      value: 6000,
+      value: displayValue(data?.totalIncome),
       icon: IconIncome,
       className: "green",
     },
     {
       label: "Total Charity",
-      value: 200,
+      value: displayValue(data?.totalCharity),
       icon: IconCharity,
       className: "purple",
     },

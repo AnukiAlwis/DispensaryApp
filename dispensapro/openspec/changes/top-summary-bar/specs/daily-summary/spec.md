@@ -38,7 +38,7 @@ The system SHALL calculate `patientsServed` as the count of `QueueEntry` records
 - **THEN** `patientsServed` returns `0`
 
 ### Requirement: Total income calculation
-The system SHALL calculate `totalIncome` as the sum of `grandTotal` from all `Bill` records where `status = PAID`, `createdAt` is today, `tenant_id` matches the request tenant, and the bill's prescription's doctor matches the current user.
+The system SHALL calculate `totalIncome` as the sum of `grandTotal` (net amount after discounts) from all `Bill` records where `status = PAID`, `createdAt` is today, `tenant_id` matches the request tenant, and the bill's prescription's doctor matches the current user. `grandTotal` represents the actual amount collected from the patient (i.e., `doctorFeeFinal + medicineTotalFinal`, after discounts applied).
 
 #### Scenario: Multiple paid bills today
 - **WHEN** the doctor has 2 PAID bills today with `grandTotal` values of 1500.00 and 3000.00
@@ -53,7 +53,7 @@ The system SHALL calculate `totalIncome` as the sum of `grandTotal` from all `Bi
 - **THEN** `totalIncome` returns `0`
 
 ### Requirement: Total charity calculation
-The system SHALL calculate `totalCharity` as the sum of `((doctorFee * COALESCE(doctorDiscountPct, 0) / 100) + (medicineTotal * COALESCE(pharmacyDiscountPct, 0) / 100))` from all `Bill` records where `createdAt` is today, `tenant_id` matches the request tenant, and the bill's prescription's doctor matches the current user. Bill status is not filtered (charity/discounts apply regardless of payment status). The calculation uses the raw percentage fields (`doctorDiscountPct`, `pharmacyDiscountPct`) rather than the pre-calculated final fields (`doctorFeeFinal`, `medicineTotalFinal`) to ensure correctness even when the `calculateBill` API has not been called.
+The system SHALL calculate `totalCharity` as the sum of `((doctorFee * COALESCE(doctorDiscountPct, 0) / 100) + (medicineTotal * COALESCE(pharmacyDiscountPct, 0) / 100))` from all `Bill` records where `createdAt` is today, `tenant_id` matches the request tenant, the bill's prescription's doctor matches the current user, and `status != 'VOID'`. Both PAID and DUE bills are included — discounts/charity given are counted regardless of payment status. VOID (cancelled) bills are excluded. The calculation uses the raw percentage fields (`doctorDiscountPct`, `pharmacyDiscountPct`) rather than the pre-calculated final fields (`doctorFeeFinal`, `medicineTotalFinal`) to ensure correctness even when the `calculateBill` API has not been called.
 
 #### Scenario: Bill with doctor discount only
 - **WHEN** a bill today has `doctorFee = 1000`, `doctorDiscountPct = 20`, `medicineTotal = 500`, `pharmacyDiscountPct = null`
@@ -66,6 +66,10 @@ The system SHALL calculate `totalCharity` as the sum of `((doctorFee * COALESCE(
 #### Scenario: No discounts given
 - **WHEN** all bills today have `doctorDiscountPct = null` and `pharmacyDiscountPct = null`
 - **THEN** `totalCharity` returns `0`
+
+#### Scenario: VOID bills excluded
+- **WHEN** the doctor has a VOID bill today with `doctorFee = 1000`, `doctorDiscountPct = 50`, `medicineTotal = 500`, `pharmacyDiscountPct = 10`
+- **THEN** `totalCharity` returns `0` — VOID (cancelled) bills are excluded from charity calculation
 
 #### Scenario: calculateBill never called but discounts set
 - **WHEN** a bill today has `doctorFee = 1000`, `doctorDiscountPct = 30`, `medicineTotal = 0` (stale, calculateBill was not called after dispensing), `pharmacyDiscountPct = 10`
@@ -96,3 +100,18 @@ The frontend `TopSummaryBar` component SHALL fetch summary data from `GET /summa
 #### Scenario: API error
 - **WHEN** the API request fails
 - **THEN** the TopSummaryBar displays 0 for all values or an error indicator
+
+### Requirement: Immediate summary refresh on data-changing actions
+The frontend SHALL use React Query's `invalidateQueries` to immediately refresh the summary data when specific user actions occur that change queue status or billing data. This provides instant feedback while 30-second polling continues as a safety net for changes from other sources.
+
+#### Scenario: Queue status change triggers immediate refresh
+- **WHEN** a user successfully calls `queueService.serve()`, `queueService.start()`, or `queueService.create()`
+- **THEN** the component invalidates the `["summary", "today"]` query, triggering an immediate refetch of the summary API
+
+#### Scenario: Billing status change triggers immediate refresh
+- **WHEN** a user successfully calls `billingService.updateStatus()` or `billingService.updateDiscounts()`
+- **THEN** the component invalidates the `["summary", "today"]` query, triggering an immediate refetch of the summary API
+
+#### Scenario: Invalidation coexists with polling
+- **WHEN** both the 30-second polling timer and a user action trigger a refetch simultaneously
+- **THEN** React Query deduplicates the requests and only makes one API call to `/summary/today`

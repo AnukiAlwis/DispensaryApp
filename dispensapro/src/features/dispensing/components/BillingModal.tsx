@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Dialog,
   DialogTitle,
@@ -56,7 +57,14 @@ export default function BillingModal({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [amountReceived, setAmountReceived] = useState<string>("");
-  const [isCompleting, setIsCompleting] = useState(false);
+  const queryClient = useQueryClient();
+
+  const markPaidMutation = useMutation({
+    mutationFn: (billId: string) => billingService.updateStatus(billId, "PAID"),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["summary", "today"] });
+    }
+  });
 
   useEffect(() => {
     if (open && prescriptionId) {
@@ -96,17 +104,14 @@ export default function BillingModal({
   const handleComplete = async () => {
     if (!bill) return;
 
-    setIsCompleting(true);
     setError(null);
 
     try {
-      await billingService.updateStatus(bill.id, "PAID");
+      await markPaidMutation.mutateAsync(bill.id);
       onComplete();
     } catch (err: any) {
       setError("Failed to complete payment. Please try again.");
       console.error("Error completing payment:", err);
-    } finally {
-      setIsCompleting(false);
     }
   };
 
@@ -371,7 +376,7 @@ export default function BillingModal({
           <Button
             onClick={onBack}
             variant="outlined"
-            disabled={isCompleting}
+            disabled={markPaidMutation.isPending}
           >
             BACK
           </Button>
@@ -379,7 +384,7 @@ export default function BillingModal({
             onClick={handlePrint}
             variant="contained"
             sx={{ bgcolor: "#ff9800", "&:hover": { bgcolor: "#f57c00" } }}
-            disabled={isCompleting}
+            disabled={markPaidMutation.isPending}
           >
             PRINT
           </Button>
@@ -387,10 +392,10 @@ export default function BillingModal({
             onClick={handleComplete}
             variant="contained"
             color="primary"
-            disabled={isCompleting || isChangeNegative || !amountReceived}
+            disabled={markPaidMutation.isPending || isChangeNegative || !amountReceived}
             sx={{ minWidth: 120 }}
           >
-            {isCompleting ? (
+            {markPaidMutation.isPending ? (
               <CircularProgress size={24} color="inherit" />
             ) : (
               "DONE"

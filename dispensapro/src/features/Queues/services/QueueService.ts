@@ -32,14 +32,13 @@ export const queueService = {
     return res.data;
   },
 
+  remove: async (id: string): Promise<void> => {
+    await apiClient.patch(`/queue/${id}/remove`);
+  },
+
 //   // Update queue (e.g., change status)
 //   update: async (id: string, updates: Partial<Queue>): Promise<Queue> => {
 //     const res = await apiClient.put(`/queue/${id}`, updates);
 //     return res.data;
-//   },
-
-//   // Delete queue entry (if allowed)
-//   delete: async (id: string): Promise<void> => {
-//     await apiClient.delete(`/queue/${id}`);
 //   },
 };

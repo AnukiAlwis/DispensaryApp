@@ -18,6 +18,7 @@ apiClient.interceptors.request.use(
     config.headers = config.headers ?? {};
 
     config.headers["X-Tenant-ID"] = "f9a84146-cd5d-44da-b689-d6fd1c4ec896";
+    config.headers["X-User-ID"] = "3c2c95c5-db0d-42e9-86de-b02cfecddbda";
     // Example: attach auth token when Keycloak is integrated
     // const token = getTokenFromStoreOrContext();
     // if (token) config.headers['Authorization'] = `Bearer ${token}`;

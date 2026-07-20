@@ -1,4 +1,5 @@
 import { useRef, useState } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Dialog,
   DialogTitle,
@@ -48,9 +49,16 @@ export default function CheckInDialog({ open, onClose }: CheckInDialogProps) {
   const [options, setOptions] = useState<QueueSearchResult[]>([]);
   const [loadingOptions, setLoadingOptions] = useState(false);
   const [selectedQueue, setSelectedQueue] = useState<QueueSearchResult | null>(null);
-  const [confirming, setConfirming] = useState(false);
   const [success, setSuccess] = useState(false);
   const debounceTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const queryClient = useQueryClient();
+
+  const checkInMutation = useMutation({
+    mutationFn: (queueId: string) => apiClient.patch(`/queue/${queueId}/check-in`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["summary", "today"] });
+    }
+  });
 
   const runSearch = async (term: string) => {
     if (!term.trim()) {
@@ -83,17 +91,14 @@ export default function CheckInDialog({ open, onClose }: CheckInDialogProps) {
 
   const handleConfirm = async () => {
     if (!selectedQueue) return;
-    setConfirming(true);
     try {
-      const res = await apiClient.patch(`/queue/${selectedQueue.id}/check-in`);
+      const res = await checkInMutation.mutateAsync(selectedQueue.id);
       const updated: QueueSearchResult = res.data;
       setSelectedQueue(updated);
       setSuccess(true);
       showSnackbar("Patient checked in successfully");
     } catch {
       // error toast already shown by apiClient interceptor
-    } finally {
-      setConfirming(false);
     }
   };
 
@@ -314,12 +319,12 @@ export default function CheckInDialog({ open, onClose }: CheckInDialogProps) {
             variant="contained"
             color="primary"
             onClick={handleConfirm}
-            disabled={confirming || alreadyCheckedIn}
+            disabled={checkInMutation.isPending || alreadyCheckedIn}
             endIcon={
-              confirming ? <CircularProgress size={18} color="inherit" /> : <ArrowForwardIcon />
+              checkInMutation.isPending ? <CircularProgress size={18} color="inherit" /> : <ArrowForwardIcon />
             }
           >
-            {confirming
+            {checkInMutation.isPending
               ? "Confirming..."
               : alreadyCheckedIn
               ? "Already Checked-In"
