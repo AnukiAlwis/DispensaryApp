@@ -17,8 +17,8 @@ apiClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
     config.headers = config.headers ?? {};
 
-    config.headers["X-Tenant-ID"] = "f9a84146-cd5d-44da-b689-d6fd1c4ec896";
-    config.headers["X-User-ID"] = "3c2c95c5-db0d-42e9-86de-b02cfecddbda";
+    config.headers["X-Tenant-ID"] = "1f50d50d-f586-40ba-bba4-ca8e54624d37";
+    config.headers["X-User-ID"] = "1fc9e3c0-7c95-40f6-bdf6-9251c0fefba9";
     // Example: attach auth token when Keycloak is integrated
     // const token = getTokenFromStoreOrContext();
     // if (token) config.headers['Authorization'] = `Bearer ${token}`;

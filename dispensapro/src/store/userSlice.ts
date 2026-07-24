@@ -12,21 +12,17 @@ interface UserState {
 
 const initialState: UserState = {
   // userDetails: {
-  //   id: 'c57ab2ff-f06b-4bfb-9fda-2765b86650e3',
-  //   username: 'PHARMA10',
-  //   fullName: 'PHARMA10 User',
-  //   email: 'PHARMA10@example.com',
-  //   phone: '+94123456789',
-  //   role: "PHARMACIST",
-  //   doctorCharge: null,
-  //   tenantId: 'f9a84146-cd5d-44da-b689-d6fd1c4ec896',
-  //   createdAt: '2025-11-06T20:15:16.007009',
-  //   updatedAt: null,
+  //   "id": "1fc9e3c0-7c95-40f6-bdf6-9251c0fefba9",
+    // "username": "drhemantha",
+    // "fullName": "Dr. Hemantha Alwis",
+    // "email": "hemantha.alwis@medcare.com",
+    // "phone": "+94771234567",
+    // "role": "DOCTOR",
   // },
   userDetails: {
-    id: "3c2c95c5-db0d-42e9-86de-b02cfecddbda",
-    username: "DOCTOR9",
-    email: "DOCTOR9@example.com",
+    id: "1fc9e3c0-7c95-40f6-bdf6-9251c0fefba9",
+    username: "drhemantha",
+    email: "hemantha.alwis@medcare.com",
     role: "DOCTOR"
   },
 };
