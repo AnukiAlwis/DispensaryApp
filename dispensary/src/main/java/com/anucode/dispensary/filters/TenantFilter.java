@@ -19,7 +19,7 @@ public class TenantFilter extends HttpFilter {
             throws IOException, ServletException {
 
         String path = request.getRequestURI();
-        if (path.startsWith("/h2-console") || path.startsWith("/error")) {
+        if (path.startsWith("/h2-console") || path.startsWith("/error") || path.startsWith("/tenants")) {
             chain.doFilter(request, response);
             return;
         }

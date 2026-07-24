@@ -1,0 +1,255 @@
+{
+  "info": {
+    "name": "DispensaryApp - Tenant Setup & Patient Data",
+    "description": "Collection for setting up tenant metadata and inserting patient data",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Create Tenant",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/tenants?name={{tenantName}}&code={{tenantCode}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["tenants"],
+          "query": [
+            {
+              "key": "name",
+              "value": "{{tenantName}}"
+            },
+            {
+              "key": "code",
+              "value": "{{tenantCode}}"
+            }
+          ]
+        },
+        "description": "Create a new tenant (multi-tenant system setup). This is the first step - no tenant context required."
+      },
+      "response": []
+    },
+    {
+      "name": "2. Create User (Doctor)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "X-Tenant-ID",
+            "value": "{{tenantId}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"{{doctorUsername}}\",\n  \"fullName\": \"{{doctorFullName}}\",\n  \"email\": \"{{doctorEmail}}\",\n  \"phone\": \"{{doctorPhone}}\",\n  \"role\": \"DOCTOR\",\n  \"doctorCharge\": {{doctorCharge}}\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/users",
+          "host": ["{{baseUrl}}"],
+          "path": ["users"]
+        },
+        "description": "Create a doctor user. Requires X-Tenant-ID header. The doctorId will be used for creating visits."
+      },
+      "response": []
+    },
+    {
+      "name": "3. Create User (Receptionist)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "X-Tenant-ID",
+            "value": "{{tenantId}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"{{receptionistUsername}}\",\n  \"fullName\": \"{{receptionistFullName}}\",\n  \"email\": \"{{receptionistEmail}}\",\n  \"phone\": \"{{receptionistPhone}}\",\n  \"role\": \"RECEPTIONIST\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/users",
+          "host": ["{{baseUrl}}"],
+          "path": ["users"]
+        },
+        "description": "Create a receptionist user. This user will be used as createdById when creating patients."
+      },
+      "response": []
+    },
+    {
+      "name": "4. Create Patient",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "X-Tenant-ID",
+            "value": "{{tenantId}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"firstName\": \"{{patientFirstName}}\",\n  \"lastName\": \"{{patientLastName}}\",\n  \"dob\": \"{{patientDob}}\",\n  \"gender\": \"{{patientGender}}\",\n  \"contact\": \"{{patientContact}}\",\n  \"address\": \"{{patientAddress}}\",\n  \"createdById\": \"{{receptionistId}}\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/patients",
+          "host": ["{{baseUrl}}"],
+          "path": ["patients"]
+        },
+        "description": "Create a patient record. Requires X-Tenant-ID header and createdById (user UUID)."
+      },
+      "response": []
+    },
+    {
+      "name": "5. Create Medicine",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "X-Tenant-ID",
+            "value": "{{tenantId}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"{{medicineName}}\",\n  \"form\": \"{{medicineForm}}\",\n  \"strength\": \"{{medicineStrength}}\",\n  \"unitOfMeasurement\": \"{{medicineUom}}\",\n  \"sellPrice\": {{medicineSellPrice}},\n  \"reorderLevel\": {{medicineReorderLevel}},\n  \"quantity\": {{medicineQuantity}}\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/medicines",
+          "host": ["{{baseUrl}}"],
+          "path": ["medicines"]
+        },
+        "description": "Add medicine to inventory. Required for prescriptions. Optional for basic patient creation."
+      },
+      "response": []
+    },
+    {
+      "name": "6. Create Distributor",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "X-Tenant-ID",
+            "value": "{{tenantId}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"{{distributorName}}\",\n  \"contact\": \"{{distributorContact}}\",\n  \"address\": \"{{distributorAddress}}\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/distributors",
+          "host": ["{{baseUrl}}"],
+          "path": ["distributors"]
+        },
+        "description": "Create a medicine distributor. Optional for patient creation but needed for supply management."
+      },
+      "response": []
+    },
+    {
+      "name": "7. Create Visit",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "X-Tenant-ID",
+            "value": "{{tenantId}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"patientId\": \"{{patientId}}\",\n  \"doctorId\": \"{{doctorId}}\",\n  \"visitTime\": \"{{visitTime}}\",\n  \"status\": \"OPEN\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/visits",
+          "host": ["{{baseUrl}}"],
+          "path": ["visits"]
+        },
+        "description": "Create a patient visit. Requires patientId and doctorId. This is needed for prescriptions."
+      },
+      "response": []
+    },
+    {
+      "name": "8. Create Prescription",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "X-Tenant-ID",
+            "value": "{{tenantId}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"visitId\": \"{{visitId}}\",\n  \"patientId\": \"{{patientId}}\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/prescriptions",
+          "host": ["{{baseUrl}}"],
+          "path": ["prescriptions"]
+        },
+        "description": "Create a prescription for a visit. Requires visitId and patientId."
+      },
+      "response": []
+    },
+    {
+      "name": "9. Add Prescription Item",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "X-Tenant-ID",
+            "value": "{{tenantId}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"medicineId\": \"{{medicineId}}\",\n  \"dosage\": \"{{rxItemDosage}}\",\n  \"frequency\": \"{{rxItemFrequency}}\",\n  \"duration\": \"{{rxItemDuration}}\",\n  \"instructions\": \"{{rxItemInstructions}}\",\n  \"quantity\": {{rxItemQuantity}}\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/prescriptions/{{prescriptionId}}/items",
+          "host": ["{{baseUrl}}"],
+          "path": ["prescriptions", "{{prescriptionId}}", "items"]
+        },
+        "description": "Add medicine item to prescription. Requires medicineId."
+      },
+      "response": []
+    }
+  ]
+}
