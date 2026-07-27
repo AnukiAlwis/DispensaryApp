@@ -217,23 +217,23 @@
 
 ## 53. Verification: Tenant Derivation from Subdomain
 
-- [ ] 53.1 Test with localhost: Access auth endpoint without subdomain. Verify tenant derivation is skipped (auth endpoint handles tenantCode from request body).
+- [X] 53.1 Test with localhost: Access auth endpoint without subdomain. Verify tenant derivation is skipped (auth endpoint handles tenantCode from request body).
 - [ ] 53.2 Test with subdomain using sslip.io: Configure host entry or use `hma001.sslip.io`. Verify TenantFilter extracts subdomain correctly.
 - [ ] 53.3 Check backend logs for TenantFilter subdomain extraction. Verify tenant is derived from subdomain.
 - [ ] 53.4 Test invalid subdomain: Access with unknown subdomain. Verify 401 Unauthorized response.
 
 ## 54. Verification: Security Configuration
 
-- [ ] 54.1 Access `/api/auth/login` without token in Postman. Verify 200 response (public endpoint).
-- [ ] 54.2 Access protected endpoint (e.g., `/api/patients`) without token in Postman. Verify 401 response.
-- [ ] 54.3 Access protected endpoint with valid Bearer token in Postman. Verify successful response (200).
+- [X] 54.1 Access `/api/auth/login` without token in Postman. Verify 200 response (public endpoint).
+- [-] 54.2 Access protected endpoint (e.g., `/api/patients`) without token in Postman. Verify 401 response. --> ?? 403 code is coming
+- [X] 54.3 Access protected endpoint with valid Bearer token in Postman. Verify successful response (200).
 
 ## 55. Verification: Frontend Login Flow
 
-- [ ] 55.1 Navigate to `/login` in browser. Verify login form is displayed.
-- [ ] 55.2 Enter valid credentials (doctor/password123) and submit form.
-- [ ] 55.3 Check browser DevTools → Application → Local Storage. Verify `accessToken` and `refreshToken` are present.
-- [ ] 55.4 Verify redirect to dashboard after successful login.
+- [X] 55.1 Navigate to `/login` in browser. Verify login form is displayed.
+- [X] 55.2 Enter valid credentials (doctor/password123) and submit form.
+- [X] 55.3 Check browser DevTools → Application → Local Storage. Verify `accessToken` and `refreshToken` are present.
+- [X] 55.4 Verify redirect to dashboard after successful login.
 
 ## 56. Verification: Token Storage
 
@@ -242,14 +242,14 @@
 
 ## 57. Verification: Authorization Header
 
-- [ ] 57.1 Open browser DevTools → Network tab. Make an API call after login.
-- [ ] 57.2 Click the API request and check Request Headers. Verify `Authorization: Bearer <token>` header is present.
-- [ ] 57.3 Verify the token matches the one in localStorage.
+- [X] 57.1 Open browser DevTools → Network tab. Make an API call after login.
+- [X] 57.2 Click the API request and check Request Headers. Verify `Authorization: Bearer <token>` header is present.
+- [X] 57.3 Verify the token matches the one in localStorage.
 
 ## 58. Verification: Protected Routes
 
 - [ ] 58.1 Clear localStorage (logout) in browser DevTools.
-- [ ] 58.2 Navigate directly to protected route (e.g., `/dashboard`). Verify redirect to `/login`.
+- [X] 58.2 Navigate directly to protected route (e.g., `/dashboard`). Verify redirect to `/login`.
 - [ ] 58.3 Verify URL contains redirect parameter after login redirect.
 
 ## 59. Verification: Automatic Token Refresh
