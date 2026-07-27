@@ -52,6 +52,15 @@ public class User {
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
+    @Column(name = "password_hash")
+    private String passwordHash;
+
+    @Column(name = "is_active")
+    private Boolean isActive = true;
+
+    @Column(name = "must_reset_password")
+    private Boolean mustResetPassword = false;
+
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
@@ -59,6 +68,8 @@ public class User {
     public void prePersist() {
         if (id == null) id = UUID.randomUUID();
         if (createdAt == null) createdAt = LocalDateTime.now();
+        if (isActive == null) isActive = true;
+        if (mustResetPassword == null) mustResetPassword = false;
     }
 
     @PreUpdate

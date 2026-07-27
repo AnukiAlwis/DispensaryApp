@@ -8,14 +8,10 @@ import {
   Avatar,
   Box,
   Divider,
-  Button,
 } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
 import LogoutIcon from "@mui/icons-material/Logout";
-import SearchIcon from "@mui/icons-material/Search";
-import NotificationsNoneIcon from "@mui/icons-material/NotificationsNone";
-import { Pallet } from "@mui/icons-material";
-import { theme } from "../styles/theme";
+import { useAuth } from "../hooks/useAuth";
 
 interface TopBarProps {
   isMobile: boolean;
@@ -23,6 +19,8 @@ interface TopBarProps {
 }
 
 export default function TopBar({ isMobile, onToggleSidebar }: TopBarProps) {
+  const { user, logout } = useAuth();
+
   return (
     <AppBar
       position="sticky"
@@ -82,10 +80,10 @@ export default function TopBar({ isMobile, onToggleSidebar }: TopBarProps) {
 
             <Stack spacing={0} sx={{ textAlign: "right" }}>
               <Typography variant="body2" sx={{ fontWeight: 600, color: "white" }}>
-                Super Admin
+                {user?.fullName || 'User'}
               </Typography>
               <Typography variant="caption" sx={{ color: "rgba(255, 255, 255, 0.7)" }}>
-                Administrator
+                {user?.role || 'Role'}
               </Typography>
             </Stack>
 
@@ -100,6 +98,7 @@ export default function TopBar({ isMobile, onToggleSidebar }: TopBarProps) {
             />
 
             <IconButton
+              onClick={logout}
               sx={{
                 borderRadius: 100,
                 bgcolor: "rgba(255, 255, 255, 0.15)",

@@ -1,5 +1,6 @@
 import { createBrowserRouter, Navigate } from "react-router-dom";
 import AppLayout from "../src/layouts/AppLayout";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 // Feature pages
 import PatientsPage from "../src/features/patients/pages/PatientsPage";
@@ -10,12 +11,21 @@ import DistributorsPage from "./features/pharmacy/pages/DistributorsPage";
 import SupplyManagementPage from "./features/pharmacy/pages/SupplyManagementPage";
 import PrescriptionDispensingPage from "./features/dispensing/pages/PrescriptionDispensingPage";
 
-// Future: add standalone public routes (login, landing, etc.)
+// Auth pages
+import LoginPage from "./pages/LoginPage";
 
 export const router = createBrowserRouter([
   {
+    path: "/login",
+    element: <LoginPage />,
+  },
+  {
     path: "/",
-    element: <AppLayout />, // Protected layout with sidebar + top summary
+    element: (
+      <ProtectedRoute>
+        <AppLayout />
+      </ProtectedRoute>
+    ), // Protected layout with sidebar + top summary
     children: [
       { index: true, element: <Navigate to="/patients" replace /> }, // default redirect
       { path: "patients", element: <PatientsPage /> },

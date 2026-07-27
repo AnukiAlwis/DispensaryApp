@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -49,6 +50,11 @@ public class TenantServiceImpl implements TenantService {
                         .createdAt(t.getCreatedAt())
                         .build())
                 .toList(); // returns unmodifiable list in Java 16+
+    }
+
+    @Override
+    public Optional<Tenant> findByCode(String code) {
+        return tenantRepository.findByCode(code);
     }
 }
 

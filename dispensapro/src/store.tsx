@@ -1,13 +1,14 @@
 import { configureStore } from "@reduxjs/toolkit";
 import userReducer from "./store/userSlice";
 import consultationSessionReducer from "./store/consultationSlice";
+import authReducer from "./store/authSlice";
 import { savePersistedSession } from "./store/sessionStoragePersist";
 
 export const store = configureStore({
   reducer: {
     user: userReducer,
     consultationSession: consultationSessionReducer,
-    // auth: authReducer,
+    auth: authReducer,
     // add more slices here
   },
   // middleware: (getDefaultMiddleware) => getDefaultMiddleware().concat(customMiddleware),

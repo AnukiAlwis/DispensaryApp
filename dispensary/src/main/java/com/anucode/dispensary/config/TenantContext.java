@@ -15,18 +15,13 @@ public class TenantContext {
         return currentTenant.get();
     }
 
-    // Set Current User (for MVP, hardcoded if not provided)
+    // Set Current User (must come from JWT authentication)
     public static void setCurrentUser(UUID userId) {
         currentUser.set(userId);
     }
 
     public static UUID getCurrentUser() {
-        UUID userId = currentUser.get();
-        if (userId == null) {
-            // Phase 1 default hardcoded user
-            return UUID.fromString("3c2c95c5-db0d-42e9-86de-b02cfecddbda");
-        }
-        return userId;
+        return currentUser.get();
     }
 
     // Clear both

@@ -1667,15 +1667,98 @@ All monetary values use decimal format with 2 decimal places (e.g., `1500.00`)
 
 ## Authentication and Authorization
 
+### Authentication Endpoints
+
+#### Login
+**POST** `/api/auth/login`
+
+Authenticates a user and returns JWT tokens.
+
+**Request Body:**
+```json
+{
+  "username": "doctor",
+  "password": "password123",
+  "tenantCode": "HMA001"
+}
+```
+
+**Response:**
+```json
+{
+  "accessToken": "eyJhbGciOiJSUzI1NiJ9...",
+  "refreshToken": "550e8400-e29b-41d4-a716-446655440000",
+  "user": {
+    "id": "550e8400-e29b-41d4-a716-446655440000",
+    "username": "doctor",
+    "fullName": "Dr. John Doe",
+    "role": "DOCTOR"
+  }
+}
+```
+
+**Status Codes:**
+- `200` - Login successful
+- `401` - Invalid credentials
+- `404` - Tenant or user not found
+
+#### Refresh Token
+**POST** `/api/auth/refresh`
+
+Refreshes an access token using a refresh token.
+
+**Request Body:**
+```json
+{
+  "refreshToken": "550e8400-e29b-41d4-a716-446655440000"
+}
+```
+
+**Response:**
+```json
+{
+  "accessToken": "eyJhbGciOiJSUzI1NiJ9...",
+  "refreshToken": "550e8400-e29b-41d4-a716-446655440001",
+  "user": {
+    "id": "550e8400-e29b-41d4-a716-446655440000",
+    "username": "doctor",
+    "fullName": "Dr. John Doe",
+    "role": "DOCTOR"
+  }
+}
+```
+
+**Status Codes:**
+- `200` - Token refreshed successfully
+- `401` - Invalid or expired refresh token
+
+#### Logout
+**POST** `/api/auth/logout`
+
+Invalidates the refresh token and logs out the user.
+
+**Request Body:**
+```json
+{
+  "refreshToken": "550e8400-e29b-41d4-a716-446655440000"
+}
+```
+
+**Status Codes:**
+- `200` - Logout successful
+- `401` - Invalid refresh token
+
 ### Tenant Context
-All API calls (except tenant management) require tenant context to be established. This is typically handled through:
-- HTTP Header: `X-Tenant-ID: {tenant-uuid}`
-- Or through JWT token containing tenant information
+All API calls (except tenant management) require tenant context. Tenant is derived from the subdomain (e.g., `hma001.localhost` maps to tenant code `HMA001`). The `X-Tenant-ID` header is informational only and is not used for authentication.
 
 ### User Authentication
-Users must be authenticated to access the API. Authentication is typically handled through:
-- JWT Bearer tokens in `Authorization` header
-- Session-based authentication
+All protected endpoints require a valid JWT access token in the `Authorization` header:
+
+```
+Authorization: Bearer eyJhbGciOiJSUzI1NiJ9...
+```
+
+Access tokens expire after 10 minutes. The frontend should use the refresh token to obtain a new access token when needed.
 
 ### Role-Based Access Control
 Different endpoints may require specific user roles:

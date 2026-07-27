@@ -1,6 +1,7 @@
 // src/services/apiClient.ts
 import axios, { InternalAxiosRequestConfig, AxiosResponse } from "axios";
 import { showSnackbar } from "../utils/showSnackbar";
+import { getTokenFromStore, clearTokens, refreshAccessToken } from "../utils/auth";
 
 const apiClient = axios.create({
   //baseURL: import.meta.env.VITE_API_URL, // set in .env
@@ -12,16 +13,18 @@ const apiClient = axios.create({
   },
 });
 
-// Request interceptor (future Keycloak auth integration)
+// Request interceptor
 apiClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
     config.headers = config.headers ?? {};
 
+    // Keep X-Tenant-ID for developer visibility (informational only)
     config.headers["X-Tenant-ID"] = "1f50d50d-f586-40ba-bba4-ca8e54624d37";
-    config.headers["X-User-ID"] = "1fc9e3c0-7c95-40f6-bdf6-9251c0fefba9";
-    // Example: attach auth token when Keycloak is integrated
-    // const token = getTokenFromStoreOrContext();
-    // if (token) config.headers['Authorization'] = `Bearer ${token}`;
+
+    // Add Authorization header with Bearer token
+    const token = getTokenFromStore();
+    if (token) config.headers["Authorization"] = `Bearer ${token}`;
+
     return config;
   },
   (error) => Promise.reject(error)
@@ -30,7 +33,28 @@ apiClient.interceptors.request.use(
 // Response interceptor for centralized error handling
 apiClient.interceptors.response.use(
   (response: AxiosResponse) => response,
-  (error) => {
+  async (error) => {
+    const originalRequest = error.config;
+
+    // Handle 401 errors with automatic token refresh
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true;
+
+      try {
+        const newAccessToken = await refreshAccessToken();
+        // Update tokens in localStorage (done by refreshAccessToken)
+        // Update Authorization header for retry
+        originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
+        // Retry original request with new token
+        return apiClient(originalRequest);
+      } catch (refreshError) {
+        // Refresh failed, clear tokens and redirect to login
+        clearTokens();
+        window.location.href = '/login';
+        return Promise.reject(refreshError);
+      }
+    }
+
     // Default behavior: show snackbar unless disabled
     if (error.config?.headers?.["x-suppress-snackbar"] !== true) {
       const message =
