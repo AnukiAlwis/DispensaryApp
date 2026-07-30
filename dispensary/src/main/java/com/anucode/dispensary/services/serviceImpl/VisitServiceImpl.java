@@ -136,7 +136,7 @@ public class VisitServiceImpl implements VisitService {
                                 VisitNoteResponseDto noteDto = modelMapper.map(note, VisitNoteResponseDto.class);
                                 if (note.getRecordedBy() != null) {
                                     noteDto.setRecordedById(note.getRecordedBy().getId());
-                                    noteDto.setRecordedByUsername(note.getRecordedBy().getUsername());
+                                    noteDto.setRecordedByFullName(note.getRecordedBy().getFullName());
                                     noteDto.setRecordedByRole(note.getRecordedBy().getRole().name());
                                 }
                                 return noteDto;

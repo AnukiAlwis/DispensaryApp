@@ -121,6 +121,9 @@ export default function BillingModal({
 
   const isChangeNegative = change < 0;
 
+
+  console.log("visit", visit);
+
   return (
     <>
       <style>
@@ -213,11 +216,12 @@ export default function BillingModal({
                 <Typography variant="h6" gutterBottom sx={{ fontWeight: "bold" }}>
                   Doctor Notes
                 </Typography>
+                
                 {visit?.notes && visit.notes.length > 0 ? (
                   visit.notes.map((note) => (
                     <Box key={note.id} sx={{ mb: 1 }}>
                       <Typography variant="body2" sx={{ fontWeight: 600, display: "inline" }}>
-                        {note.recordedByUsername}
+                        {note.recordedByFullName}
                         {note.recordedByRole && ` (${note.recordedByRole})`}:
                       </Typography>{" "}
                       <Typography variant="body1" sx={{ display: "inline" }}>

@@ -24,7 +24,7 @@ export interface VisitNote {
   id: string;
   note: string;
   recordedById: string;
-  recordedByUsername: string;
+  recordedByFullName: string;
   recordedByRole: string;
 }
 

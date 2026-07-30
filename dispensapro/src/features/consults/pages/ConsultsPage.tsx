@@ -32,7 +32,6 @@ export default function ConsultsPage() {
   const session = useSelector((state: RootState) => state.consultationSession);
   const user = useSelector((state: RootState) => state.user.userDetails);
   const doctorId = user?.id || "";
-  console.log("user", user);
 
   const [status, setStatus] = useState<"idle" | "active" | "completed">("idle");
   const [currentQueue, setCurrentQueue] = useState<Queue | null>(null);
