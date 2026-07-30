@@ -61,7 +61,6 @@ public class AuthServiceImpl implements AuthService {
 
         // Create refresh session
         String deviceId = extractDeviceId();
-        String tokenHash = refreshSessionService.hashToken(refreshToken);
         refreshSessionService.create(user, refreshToken, deviceId);
 
         // Build response

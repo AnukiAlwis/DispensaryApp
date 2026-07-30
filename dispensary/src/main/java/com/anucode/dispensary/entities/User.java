@@ -7,7 +7,6 @@ import lombok.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.UUID;
-import java.util.List;
 
 @Entity
 @Table(name = "app_user", uniqueConstraints = @UniqueConstraint(columnNames = {"tenant_id", "username"}))
