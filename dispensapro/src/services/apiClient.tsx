@@ -2,6 +2,9 @@
 import axios, { InternalAxiosRequestConfig, AxiosResponse } from "axios";
 import { showSnackbar } from "../utils/showSnackbar";
 import { getTokenFromStore, clearTokens, refreshAccessToken } from "../utils/auth";
+import { store } from "../store";
+import { clearCredentials } from "../store/authSlice";
+import { clearUserDetails } from "../store/userSlice";
 
 const apiClient = axios.create({
   //baseURL: import.meta.env.VITE_API_URL, // set in .env
@@ -50,6 +53,8 @@ apiClient.interceptors.response.use(
       } catch (refreshError) {
         // Refresh failed, clear tokens and redirect to login
         clearTokens();
+        store.dispatch(clearCredentials());
+        store.dispatch(clearUserDetails());
         window.location.href = '/login';
         return Promise.reject(refreshError);
       }

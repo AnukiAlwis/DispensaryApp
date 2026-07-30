@@ -34,5 +34,30 @@ export const refreshAccessToken = async (): Promise<string> => {
   // Update tokens in localStorage
   setTokens(response.accessToken, response.refreshToken);
 
+  // Update auth credentials in Redux
+  const { store } = await import('../store');
+  const { setCredentials } = await import('../store/authSlice');
+  store.dispatch(setCredentials({
+    accessToken: response.accessToken,
+    refreshToken: response.refreshToken,
+  }));
+
+  // Update user details in Redux if user data is returned
+  if (response.user) {
+    const { setUserDetails } = await import('../store/userSlice');
+    store.dispatch(setUserDetails({
+      id: response.user.id,
+      username: response.user.username,
+      fullName: response.user.fullName,
+      email: response.user.email ?? '',
+      phone: response.user.phone ?? '',
+      role: response.user.role as any,
+      doctorCharge: response.user.doctorCharge,
+      tenantId: response.user.tenantId,
+      createdAt: response.user.createdAt,
+      updatedAt: response.user.updatedAt,
+    }));
+  }
+
   return response.accessToken;
 };

@@ -1,14 +1,18 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
 import { Box, Typography, TextField, Alert, CircularProgress } from '@mui/material';
 import ElevatedCard from '../components/ElevatedCard';
 import { Button } from '../components/Button';
 import { login } from '../services/authApiService';
 import { getTenantCode } from '../utils/tenant';
 import { setTokens } from '../utils/auth';
+import { setUserDetails } from '../store/userSlice';
+import { setCredentials } from '../store/authSlice';
 
 const LoginPage: React.FC = () => {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -25,6 +29,26 @@ const LoginPage: React.FC = () => {
       
       // Store tokens in localStorage
       setTokens(response.accessToken, response.refreshToken);
+      
+      // Store auth credentials in Redux
+      dispatch(setCredentials({
+        accessToken: response.accessToken,
+        refreshToken: response.refreshToken,
+      }));
+      
+      // Store user details in Redux
+      dispatch(setUserDetails({
+        id: response.user.id,
+        username: response.user.username,
+        fullName: response.user.fullName,
+        email: response.user.email ?? '',
+        phone: response.user.phone ?? '',
+        role: response.user.role as any, // Type assertion for UserRole
+        doctorCharge: response.user.doctorCharge,
+        tenantId: response.user.tenantId,
+        createdAt: response.user.createdAt,
+        updatedAt: response.user.updatedAt,
+      }));
       
       // Redirect to dashboard
       navigate('/');

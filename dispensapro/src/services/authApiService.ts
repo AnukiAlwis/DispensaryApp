@@ -15,7 +15,13 @@ export interface UserDto {
   id: string;
   username: string;
   fullName: string;
+  email: string;
+  phone: string;
   role: string;
+  doctorCharge?: number;
+  tenantId?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface AuthResponse {

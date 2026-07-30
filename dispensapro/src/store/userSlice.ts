@@ -1,30 +1,25 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { UserRole } from '../types/enums';
 
+interface UserDetails {
+  id: string;
+  username: string;
+  fullName: string;
+  email: string;
+  phone: string;
+  role: UserRole;
+  doctorCharge?: number;
+  tenantId?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
 interface UserState {
-  userDetails: {
-    id: string;
-    role: UserRole;
-    email: string;
-    username: string;
-  } | null;
+  userDetails: UserDetails | null;
 }
 
 const initialState: UserState = {
-  // userDetails: {
-  //   "id": "1fc9e3c0-7c95-40f6-bdf6-9251c0fefba9",
-    // "username": "drhemantha",
-    // "fullName": "Dr. Hemantha Alwis",
-    // "email": "hemantha.alwis@medcare.com",
-    // "phone": "+94771234567",
-    // "role": "DOCTOR",
-  // },
-  userDetails: {
-    id: "1fc9e3c0-7c95-40f6-bdf6-9251c0fefba9",
-    username: "drhemantha",
-    email: "hemantha.alwis@medcare.com",
-    role: "DOCTOR"
-  },
+  userDetails: null,
 };
 
 const userSlice = createSlice({
