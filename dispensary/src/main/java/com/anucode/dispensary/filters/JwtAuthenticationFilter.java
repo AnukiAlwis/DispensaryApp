@@ -30,8 +30,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         String path = request.getRequestURI();
 
-        // Skip JWT validation for auth endpoints and H2 console
-        if (path.startsWith("/h2-console") || path.startsWith("/error") || path.startsWith("/api/auth")) {
+        // Skip JWT validation for public auth endpoints and H2 console
+        if (path.startsWith("/h2-console") || path.startsWith("/error") ||
+            path.equals("/api/auth/login") || path.equals("/api/auth/refresh") || path.equals("/api/auth/logout")) {
             filterChain.doFilter(request, response);
             return;
         }

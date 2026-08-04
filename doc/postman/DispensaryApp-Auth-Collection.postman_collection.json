@@ -328,6 +328,51 @@
           }
         }
       ]
+    },
+    {
+      "name": "8. Get Current User (Protected)",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}"
+          },
+          {
+            "key": "X-Tenant-ID",
+            "value": "{{tenantId}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/auth/me",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "auth", "me"]
+        },
+        "description": "Protected auth endpoint - returns the current authenticated user's full profile"
+      },
+      "response": [],
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "var jsonData = pm.response.json();",
+              "pm.test(\"Response has id\", function () {",
+              "    pm.expect(jsonData).to.have.property('id');",
+              "});",
+              "",
+              "pm.test(\"Response has username\", function () {",
+              "    pm.expect(jsonData).to.have.property('username');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
     }
   ]
 }

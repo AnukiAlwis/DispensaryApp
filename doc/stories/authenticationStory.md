@@ -40,6 +40,7 @@
    - `POST /api/auth/login`: requires `username`, `password`, `tenantCode`; server validates credentials and returns `{ accessToken, refreshToken, user }`.
    - `POST /api/auth/refresh`: requires `refreshToken` in request body; validates and rotates tokens, returns new `{ accessToken, refreshToken }`.
    - `POST /api/auth/logout`: revokes refresh token(s) in database.
+   - `GET /api/auth/me`: returns the current authenticated user's full profile (`UserResponseDto`); requires a valid `Authorization: Bearer <token>` header.
 
 4. **Token service**
    - Access token: JWT signed with server RSA key (RS256), contains `sub`, `tenantId`, `userId`, `role`, `exp` (~5–10 min).
@@ -209,6 +210,11 @@ note : please keep the 'x-tenant-id' header without removing it for now
   # Logout
   POST http://localhost:8080/api/auth/logout
   Body: {"refreshToken": "<token>"}
+
+  # Get Current User
+  GET http://localhost:8080/api/auth/me
+  Header: Authorization: Bearer <from login>
+  Expected: 200 with full user profile
   Expected: 204 No Content
   ```
 

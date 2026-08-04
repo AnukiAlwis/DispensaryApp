@@ -43,3 +43,8 @@ export const refresh = async (refreshToken: string): Promise<AuthResponse> => {
 export const logout = async (refreshToken: string): Promise<void> => {
   await apiClient.post('/api/auth/logout', { refreshToken });
 };
+
+export const getMe = async (): Promise<UserDto> => {
+  const res = await apiClient.get('/api/auth/me');
+  return res.data;
+};

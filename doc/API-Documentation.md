@@ -1748,6 +1748,36 @@ Invalidates the refresh token and logs out the user.
 - `200` - Logout successful
 - `401` - Invalid refresh token
 
+#### Get Current User
+**GET** `/api/auth/me`
+
+Returns the currently authenticated user's full profile.
+
+**Headers:**
+```
+Authorization: Bearer eyJhbGciOiJSUzI1NiJ9...
+```
+
+**Response:**
+```json
+{
+  "id": "550e8400-e29b-41d4-a716-446655440000",
+  "username": "doctor",
+  "fullName": "Dr. John Doe",
+  "email": "john.doe@hospital.com",
+  "phone": "+94771234567",
+  "role": "DOCTOR",
+  "doctorCharge": 1500.00,
+  "tenantId": "550e8400-e29b-41d4-a716-446655440001",
+  "createdAt": "2024-01-15T08:00:00",
+  "updatedAt": "2024-01-15T08:00:00"
+}
+```
+
+**Status Codes:**
+- `200` - User profile retrieved successfully
+- `401` - Missing or invalid token
+
 ### Tenant Context
 All API calls (except tenant management) require tenant context. Tenant is derived from the subdomain (e.g., `hma001.localhost` maps to tenant code `HMA001`). The `X-Tenant-ID` header is informational only and is not used for authentication.
 
