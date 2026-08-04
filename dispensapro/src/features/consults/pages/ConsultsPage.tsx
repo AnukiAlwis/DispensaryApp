@@ -1,9 +1,10 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { Box, Button, Typography, Backdrop, CircularProgress } from "@mui/material";
 import SendIcon from "@mui/icons-material/Send";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "../../../store";
 import { startSession, setClinicalNotes, setDiscounts, clearSession } from "../../../store/consultationSlice";
+import { getUserIdFromToken } from "../../../utils/auth";
 import { queueService } from "../../Queues/services/QueueService";
 import { patientService } from "../../patients/services/patientService";
 import { visitService } from "../../visits/services/visitService";
@@ -31,9 +32,12 @@ export default function ConsultsPage() {
   const dispatch = useDispatch();
   const session = useSelector((state: RootState) => state.consultationSession);
   const user = useSelector((state: RootState) => state.user.userDetails);
-  const doctorId = user?.id || "";
+  const doctorId = user?.id || getUserIdFromToken() || "";
 
   const [status, setStatus] = useState<"idle" | "active" | "completed">("idle");
+  const [queues, setQueues] = useState<Queue[]>([]);
+  const [isQueueLoading, setIsQueueLoading] = useState(false);
+  const [queueError, setQueueError] = useState<string | null>(null);
   const [currentQueue, setCurrentQueue] = useState<Queue | null>(null);
   const [currentPatient, setCurrentPatient] = useState<Patient | null>(null);
   const [visitHistory, setVisitHistory] = useState<Visit[]>([]);
@@ -45,6 +49,9 @@ export default function ConsultsPage() {
   const [showCompletionModal, setShowCompletionModal] = useState(false);
   const [isResuming, setIsResuming] = useState(false);
   const [resumeError, setResumeError] = useState<string | null>(null);
+
+  const isResumingRef = useRef(false);
+  const lastFetchedIdRef = useRef<string | null>(null);
 
   const {
     isInitiating,
@@ -80,9 +87,29 @@ export default function ConsultsPage() {
     }
   }, [currentQueue?.patientName]);
 
+  const fetchQueues = useCallback(async () => {
+    if (!doctorId || isQueueLoading) return;
+    setIsQueueLoading(true);
+    setQueueError(null);
+    try {
+      const data = await queueService.getAll(doctorId);
+      setQueues(data || []);
+      lastFetchedIdRef.current = doctorId;
+      return data;
+    } catch (err: any) {
+      setQueueError(err.message || "Failed to fetch queue");
+    } finally {
+      setIsQueueLoading(false);
+    }
+  }, [doctorId, isQueueLoading]);
+
   const resumeFromSession = async () => {
+    if (isResumingRef.current) return;
+    isResumingRef.current = true;
+
     if (!session.queueId) {
       await resumeFromBackendQueue();
+      isResumingRef.current = false;
       return;
     }
 
@@ -90,6 +117,7 @@ export default function ConsultsPage() {
     if (minutesElapsed > 90) {
       dispatch(clearSession());
       await resumeFromBackendQueue();
+      isResumingRef.current = false;
       return;
     }
 
@@ -131,6 +159,7 @@ export default function ConsultsPage() {
       }
     } finally {
       setIsResuming(false);
+      isResumingRef.current = false;
     }
   };
 
@@ -138,8 +167,8 @@ export default function ConsultsPage() {
     setIsResuming(true);
     setResumeError(null);
     try {
-      const queues = await queueService.getAll(doctorId);
-      const inProgressQueue = queues.find((q) => q.status === "IN_PROGRESS");
+      const data = await fetchQueues();
+      const inProgressQueue = data?.find((q) => q.status === "IN_PROGRESS");
       
       if (!inProgressQueue) {
         setIsResuming(false);
@@ -186,11 +215,10 @@ export default function ConsultsPage() {
   };
 
   useEffect(() => {
-    if (status === "idle") {
+    if (status === "idle" && doctorId && !isResumingRef.current) {
       resumeFromSession();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [status, doctorId, session.queueId]); // Re-fetch if status becomes idle, doctorId changes, or session is cleared/updated
 
   const loadConsultationData = async (
     queue: Queue,
@@ -302,6 +330,10 @@ export default function ConsultsPage() {
       {status === "idle" && (
         <IdleQueueCard
           doctorId={doctorId}
+          queues={queues}
+          loading={isQueueLoading}
+          error={queueError}
+          onRefresh={fetchQueues}
           onStartConsultation={handleStartConsultation}
           // onResumeConsultation={handleResumeConsultation} // Disabled: no resume flow.
         />
