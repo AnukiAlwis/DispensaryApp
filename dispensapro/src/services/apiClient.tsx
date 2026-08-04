@@ -1,10 +1,11 @@
 // src/services/apiClient.ts
 import axios, { InternalAxiosRequestConfig, AxiosResponse } from "axios";
 import { showSnackbar } from "../utils/showSnackbar";
-import { getTokenFromStore, clearTokens, refreshAccessToken } from "../utils/auth";
+import { getTokenFromStore, clearTokens, getRefreshTokenFromStore, setTokens } from "../utils/auth";
+import { refresh } from "./authApiService";
 import { store } from "../store";
-import { clearCredentials } from "../store/authSlice";
-import { clearUserDetails } from "../store/userSlice";
+import { clearCredentials, setCredentials } from "../store/authSlice";
+import { clearUserDetails, setUserDetails } from "../store/userSlice";
 
 const apiClient = axios.create({
   //baseURL: import.meta.env.VITE_API_URL, // set in .env
@@ -44,10 +45,40 @@ apiClient.interceptors.response.use(
       originalRequest._retry = true;
 
       try {
-        const newAccessToken = await refreshAccessToken();
-        // Update tokens in localStorage (done by refreshAccessToken)
+        const refreshToken = getRefreshTokenFromStore();
+        if (!refreshToken) {
+          throw new Error('No refresh token available');
+        }
+
+        const authResponse = await refresh(refreshToken);
+        
+        // Update tokens in localStorage
+        setTokens(authResponse.accessToken, authResponse.refreshToken);
+        
+        // Update auth credentials in Redux
+        store.dispatch(setCredentials({
+          accessToken: authResponse.accessToken,
+          refreshToken: authResponse.refreshToken,
+        }));
+
+        // Update user details in Redux if user data is returned
+        if (authResponse.user) {
+          store.dispatch(setUserDetails({
+            id: authResponse.user.id,
+            username: authResponse.user.username,
+            fullName: authResponse.user.fullName,
+            email: authResponse.user.email ?? '',
+            phone: authResponse.user.phone ?? '',
+            role: authResponse.user.role as any,
+            doctorCharge: authResponse.user.doctorCharge,
+            tenantId: authResponse.user.tenantId,
+            createdAt: authResponse.user.createdAt,
+            updatedAt: authResponse.user.updatedAt,
+          }));
+        }
+
         // Update Authorization header for retry
-        originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
+        originalRequest.headers.Authorization = `Bearer ${authResponse.accessToken}`;
         // Retry original request with new token
         return apiClient(originalRequest);
       } catch (refreshError) {

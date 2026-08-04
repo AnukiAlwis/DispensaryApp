@@ -20,48 +20,6 @@ export const clearTokens = (): void => {
   localStorage.removeItem(REFRESH_TOKEN_KEY);
 };
 
-// Refresh access token using refresh token
-export const refreshAccessToken = async (): Promise<string> => {
-  const refreshToken = getRefreshTokenFromStore();
-  if (!refreshToken) {
-    throw new Error('No refresh token available');
-  }
-
-  // Import here to avoid circular dependency
-  const { refresh } = await import('../services/authApiService');
-  const response = await refresh(refreshToken);
-
-  // Update tokens in localStorage
-  setTokens(response.accessToken, response.refreshToken);
-
-  // Update auth credentials in Redux
-  const { store } = await import('../store');
-  const { setCredentials } = await import('../store/authSlice');
-  store.dispatch(setCredentials({
-    accessToken: response.accessToken,
-    refreshToken: response.refreshToken,
-  }));
-
-  // Update user details in Redux if user data is returned
-  if (response.user) {
-    const { setUserDetails } = await import('../store/userSlice');
-    store.dispatch(setUserDetails({
-      id: response.user.id,
-      username: response.user.username,
-      fullName: response.user.fullName,
-      email: response.user.email ?? '',
-      phone: response.user.phone ?? '',
-      role: response.user.role as any,
-      doctorCharge: response.user.doctorCharge,
-      tenantId: response.user.tenantId,
-      createdAt: response.user.createdAt,
-      updatedAt: response.user.updatedAt,
-    }));
-  }
-
-  return response.accessToken;
-};
-
 // Decode the access token payload without verifying the signature.
 // Safe for UI-only use; backend still validates the real token.
 export const getUserIdFromToken = (): string | null => {
