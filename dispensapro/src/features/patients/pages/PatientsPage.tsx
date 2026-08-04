@@ -11,17 +11,11 @@ import StatusChip from "../../../components/StatusChip";
 import PageHeader from "../../../components/PageHeader";
 import { usePatients } from "../hooks/usePatients";
 import { Patient } from "../types";
-import { useSelector } from "react-redux";
-import { RootState } from "../../../store";
 import VisitIcon from "@mui/icons-material/TransferWithinAStation";
 import { useNavigate } from "react-router-dom";
 import CreateVisitForm from "../../visits/components/CreateVisitForm";
 
 export default function PatientsPage() {
-  const loggedInUser = useSelector(
-    (state: RootState) => state.user.userDetails
-  );
-
   const { patients, loading, addPatient, editPatient, fetchPatients } =
     usePatients();
 
@@ -172,7 +166,6 @@ export default function PatientsPage() {
           initialValues={editingPatient || {}}
           onSubmit={handleSubmit}
           onCancel={handleClosePatientModal}
-          createdById={loggedInUser?.id}
           submitLabel={editingPatient ? "Save Changes" : "Save Patient"}
         />
       </DialogModal>

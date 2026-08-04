@@ -6,7 +6,6 @@ interface PatientFormProps {
   initialValues?: Partial<Patient>;
   onSubmit: (values: Omit<Patient, "id">) => void;
   onCancel?: () => void;
-  createdById?: string;
   submitLabel?: string;
 }
 
@@ -14,7 +13,6 @@ export default function PatientForm({
   initialValues,
   onSubmit,
   onCancel,
-  createdById,
   submitLabel = "Save Patient",
 }: PatientFormProps) {
   const [form, setForm] = useState<Omit<Patient, "id">>({
@@ -25,7 +23,6 @@ export default function PatientForm({
     gender: initialValues?.gender || null,
     contact: initialValues?.contact || "",
     address: initialValues?.address || "",
-    createdById: createdById || initialValues?.createdById || "",
   });
 
   const handleChange =

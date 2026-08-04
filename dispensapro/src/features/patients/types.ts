@@ -7,5 +7,4 @@ export interface Patient {
   gender: "Male" | "Female" | "Other"| null;
   contact: string;
   address: string;
-  createdById?: string; 
 }

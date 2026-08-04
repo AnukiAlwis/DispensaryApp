@@ -31,6 +31,4 @@ public class PatientRequestDto {
     private String contact;
 
     private String address;
-
-    private UUID createdById;
 }

@@ -7,7 +7,6 @@ export interface Medicine {
   sellPrice: number;
   reorderLevel: number;    // Stock level that triggers a reorder alert
   quantity: number;        // Current stock quantity
-  createdById?: string; 
   isActive?: boolean;
   createdAt?: string;
   updatedAt?: string | null;
@@ -31,7 +30,6 @@ export interface Distributor {
   contact: string;
   address: string;
   createdAt?: string;
-  createdById?: string;
 }
 
 export interface DistributorFormValues {

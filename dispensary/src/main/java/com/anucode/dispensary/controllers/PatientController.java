@@ -24,7 +24,8 @@ public class PatientController {
     @PostMapping
     public ResponseEntity<String> createPatient(@Valid @RequestBody PatientRequestDto request) {
         UUID tenantId = UUID.fromString(TenantContext.getTenantId());
-        String patientId = patientService.createPatient(tenantId, request, request.getCreatedById());
+        UUID createdById = TenantContext.getCurrentUser();
+        String patientId = patientService.createPatient(tenantId, request, createdById);
 
         URI location = ServletUriComponentsBuilder.fromCurrentRequest()
                 .path("/{id}")

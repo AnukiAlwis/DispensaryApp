@@ -7,8 +7,6 @@ import DialogModal from "../../../components/DialogModal";
 import MedicineForm from "../components/MedicineForm";
 import useMedicine from "../hooks/useMedicine";
 import { Medicine, MedicineFormValues } from "../types";
-import { RootState } from "../../../store";
-import { useSelector } from "react-redux";
 
 const MEDICINE_COLUMNS: Column[] = [
   { id: "name", label: "Name", sortable: true },
@@ -46,10 +44,6 @@ const MEDICINE_COLUMNS: Column[] = [
 ];
 
 export default function MedicinePage() {
-  const loggedInUser = useSelector(
-    (state: RootState) => state.user.userDetails
-  );
-
   const { medicines, addMedicine, fetchMedicines, loading, error } =
     useMedicine();
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -60,7 +54,6 @@ export default function MedicinePage() {
       ...values,
       strength: values.strength.toString(),
       unitOfMeasurement: values.unitOfMeasurement || null,
-      createdById: loggedInUser?.id,
     };
 
     try {
