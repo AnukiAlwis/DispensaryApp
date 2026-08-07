@@ -1,5 +1,6 @@
 package com.anucode.dispensary.dtos;
 
+import com.anucode.dispensary.entities.DisplayPosition;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -19,4 +20,5 @@ public class UserDto {
     private String fullName;
     private List<String> roles;
     private List<String> permissions;
+    private DisplayPosition displayPosition;
 }

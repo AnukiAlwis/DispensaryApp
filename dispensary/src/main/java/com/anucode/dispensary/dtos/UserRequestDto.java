@@ -1,10 +1,12 @@
 package com.anucode.dispensary.dtos;
 
+import com.anucode.dispensary.entities.DisplayPosition;
 import com.anucode.dispensary.entities.Role;
 import jakarta.validation.constraints.*;
 import lombok.*;
 
 import java.math.BigDecimal;
+import java.util.Set;
 
 @Getter
 @Setter
@@ -32,22 +34,28 @@ public class UserRequestDto {
     )
     private String phone;
 
-    @NotNull
-    private Role role;
+    @NotEmpty
+    private Set<Role> roles;
+
+    private DisplayPosition displayPosition;
 
     private BigDecimal doctorCharge;
 
     // Getters & Setters
 
-    @AssertTrue(message = "Doctor charge must be null unless role is DOCTOR")
+    @AssertTrue(message = "Doctor charge must be null unless user has DOCTOR role")
     public boolean isDoctorChargeValid() {
-        return role == null || !"DOCTOR".equals(role.getName()) || doctorCharge != null;
+        boolean hasDoctorRole = roles != null && roles.stream()
+                .anyMatch(role -> "DOCTOR".equals(role.getName()));
+        return !hasDoctorRole || doctorCharge != null;
     }
 
     @AssertTrue(message = "Doctor charge is invalid.")
     public boolean isDoctorChargeInRange() {
-        // if not a doctor → always valid, don’t change behaviour
-        if (role == null || !"DOCTOR".equals(role.getName())) {
+        // if not a doctor → always valid, don't change behaviour
+        boolean hasDoctorRole = roles != null && roles.stream()
+                .anyMatch(role -> "DOCTOR".equals(role.getName()));
+        if (!hasDoctorRole) {
             return true;
         }
 

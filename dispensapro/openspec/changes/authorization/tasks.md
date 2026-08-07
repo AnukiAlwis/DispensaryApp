@@ -123,3 +123,37 @@
 - [x] 11.19 Add User Management menu item to `Sidebar.tsx` (requires `USER_VIEW`) (Skipped - new feature, not permission gating)
 - [x] 11.20 Add Role Management menu item to `Sidebar.tsx` (requires `ROLE_MANAGE`) (Skipped - new feature, not permission gating)
 - [x] 11.21 Add user management routes to `routes.tsx` (Skipped - new feature, not permission gating)
+
+## 12. Multiple Roles with DisplayPosition Implementation
+
+### Backend Changes
+
+- [x] 12.1 Create `DisplayPosition.java` enum in `entities` package with values: ADMIN, DOCTOR, NURSE, PHARMACIST, RECEPTIONIST
+- [x] 12.2 Add `displayPosition` field to `User` entity with database migration
+- [x] 12.3 Update `UserRequestDto`: Change `Role role` to `Set<Role> roles`, add `DisplayPosition displayPosition`
+- [x] 12.4 Update `UserResponseDto`: Add `DisplayPosition displayPosition`
+- [x] 12.5 Update `UserDto`: Add `DisplayPosition displayPosition`
+- [x] 12.6 Update `UserServiceImpl.createUser()`: Handle multiple roles from request
+- [x] 12.7 Update `UserServiceImpl.updateUser()`: Handle displayPosition and roles updates
+- [x] 12.8 Update validation logic in `UserRequestDto`: Check if any role is DOCTOR for doctorCharge validation (not just single role)
+- [x] 12.9 Update `DataInitializer`: Set displayPosition when creating test users
+- [x] 12.10 Update `UserController`: Ensure displayPosition is included in API responses
+
+### Frontend Changes
+
+- [x] 12.11 Investigate components displaying user roles (top bar, bills, user management)
+- [x] 12.12 Update components to use `displayPosition` for UI display instead of role list
+- [x] 12.13 Update user creation/edit forms to support multiple roles selection (Skipped - user management UI is a separate feature)
+- [x] 12.14 Update role selection to allow multiple selections (checkboxes or multi-select dropdown) (Skipped - user management UI is a separate feature)
+
+### Database Migration
+
+- [x] 12.15 Add `display_position` column to `app_user` table
+- [x] 12.16 Set default value for existing users based on their primary role
+
+### API Integration
+
+- [x] 12.17 Update POST `/users` - Accept multiple roles and displayPosition
+- [x] 12.18 Update PUT `/users/{id}` - Handle displayPosition and multiple roles updates
+- [x] 12.19 Update GET `/users/{id}` - Return displayPosition in response
+- [x] 12.20 Update GET `/users` - Return displayPosition in response

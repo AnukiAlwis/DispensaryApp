@@ -10,6 +10,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
@@ -81,6 +82,9 @@ public class DataInitializer implements CommandLineRunner {
             return;
         }
 
+        // Map role name to DisplayPosition
+        DisplayPosition displayPosition = DisplayPosition.valueOf(roleName);
+
         String passwordHash = passwordEncoder.encode(password);
         User.UserBuilder userBuilder = User.builder()
                 .tenant(tenant)
@@ -89,16 +93,17 @@ public class DataInitializer implements CommandLineRunner {
                 .passwordHash(passwordHash)
                 .isActive(true)
                 .mustResetPassword(false)
-                .roles(Set.of(roleOpt.get()));
-        
+                .roles(Set.of(roleOpt.get()))
+                .displayPosition(displayPosition);
+
         // Set doctorCharge only for doctor user
         if ("doctor".equals(username)) {
             userBuilder.doctorCharge(new BigDecimal("1500.00"));
         }
-        
+
         User user = userBuilder.build();
         userRepository.save(user);
-        log.info("Created user: {} with role: {}", username, roleName);
+        log.info("Created user: {} with role: {} and displayPosition: {}", username, roleName, displayPosition);
     }
 
     private void seedPermissions() {
@@ -226,5 +231,28 @@ public class DataInitializer implements CommandLineRunner {
         // Since we removed the old role column, new users will be created with the new system
         // This is a no-op for fresh databases
         log.info("User migration check complete");
+
+        // Set default displayPosition for existing users who don't have one
+        List<User> usersWithoutDisplayPosition = userRepository.findAll().stream()
+                .filter(user -> user.getDisplayPosition() == null)
+                .toList();
+
+        if (!usersWithoutDisplayPosition.isEmpty()) {
+            log.info("Setting default displayPosition for {} existing users", usersWithoutDisplayPosition.size());
+            for (User user : usersWithoutDisplayPosition) {
+                if (!user.getRoles().isEmpty()) {
+                    // Set displayPosition based on the first role
+                    String firstRoleName = user.getRoles().iterator().next().getName();
+                    try {
+                        DisplayPosition displayPosition = DisplayPosition.valueOf(firstRoleName);
+                        user.setDisplayPosition(displayPosition);
+                        userRepository.save(user);
+                        log.info("Set displayPosition to {} for user {}", displayPosition, user.getUsername());
+                    } catch (IllegalArgumentException e) {
+                        log.warn("Could not map role {} to DisplayPosition for user {}", firstRoleName, user.getUsername());
+                    }
+                }
+            }
+        }
     }
 }

@@ -137,6 +137,7 @@ public class AuthServiceImpl implements AuthService {
                 .fullName(user.getFullName())
                 .roles(roleNames)
                 .permissions(permissions)
+                .displayPosition(user.getDisplayPosition())
                 .build();
     }
 }

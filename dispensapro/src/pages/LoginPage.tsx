@@ -45,6 +45,7 @@ const LoginPage: React.FC = () => {
         phone: response.user.phone ?? '',
         roles: response.user.roles || [],
         permissions: response.user.permissions || [],
+        displayPosition: response.user.displayPosition,
         doctorCharge: response.user.doctorCharge,
         tenantId: response.user.tenantId,
         createdAt: response.user.createdAt,

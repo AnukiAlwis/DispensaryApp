@@ -71,6 +71,7 @@ apiClient.interceptors.response.use(
             phone: authResponse.user.phone ?? '',
             roles: authResponse.user.roles || [],
             permissions: authResponse.user.permissions || [],
+            displayPosition: authResponse.user.displayPosition,
             doctorCharge: authResponse.user.doctorCharge,
             tenantId: authResponse.user.tenantId,
             createdAt: authResponse.user.createdAt,

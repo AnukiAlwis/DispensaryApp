@@ -8,6 +8,7 @@ interface UserDetails {
   phone: string;
   roles: string[];
   permissions: string[];
+  displayPosition?: string;
   doctorCharge?: number;
   tenantId?: string;
   createdAt?: string;

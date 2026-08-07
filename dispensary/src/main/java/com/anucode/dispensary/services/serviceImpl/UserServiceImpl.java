@@ -52,6 +52,14 @@ public class UserServiceImpl implements UserService {
                 .orElseThrow(() -> new TenantMismatchException("Tenant mismatch"));
         user.setTenant(tenant);
 
+        // Set roles from request
+        if (requestDto.getRoles() != null && !requestDto.getRoles().isEmpty()) {
+            user.setRoles(requestDto.getRoles());
+        }
+
+        // Set displayPosition from request
+        user.setDisplayPosition(requestDto.getDisplayPosition());
+
         user.setCreatedAt(LocalDateTime.now());
         userRepository.save(user);
         return mapToDto(user);
@@ -89,6 +97,16 @@ public class UserServiceImpl implements UserService {
         }
         if (requestDto.getDoctorCharge() != null) {
             existingUser.setDoctorCharge(requestDto.getDoctorCharge());
+        }
+
+        // Update roles if provided
+        if (requestDto.getRoles() != null && !requestDto.getRoles().isEmpty()) {
+            existingUser.setRoles(requestDto.getRoles());
+        }
+
+        // Update displayPosition if provided
+        if (requestDto.getDisplayPosition() != null) {
+            existingUser.setDisplayPosition(requestDto.getDisplayPosition());
         }
 
         existingUser.setUpdatedAt(LocalDateTime.now());

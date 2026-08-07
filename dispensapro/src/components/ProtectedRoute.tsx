@@ -20,6 +20,7 @@ const mapUserDtoToUserDetails = (user: UserDto) => ({
   phone: user.phone ?? '',
   roles: user.roles || [],
   permissions: user.permissions || [],
+  displayPosition: user.displayPosition,
   doctorCharge: user.doctorCharge,
   tenantId: user.tenantId,
   createdAt: user.createdAt,

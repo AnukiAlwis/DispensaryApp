@@ -137,12 +137,11 @@ public class VisitServiceImpl implements VisitService {
                                 if (note.getRecordedBy() != null) {
                                     noteDto.setRecordedById(note.getRecordedBy().getId());
                                     noteDto.setRecordedByFullName(note.getRecordedBy().getFullName());
-                                    // Get the first role name from the set
-                                    String roleName = note.getRecordedBy().getRoles().stream()
-                                            .findFirst()
-                                            .map(role -> role.getName())
-                                            .orElse("UNKNOWN");
-                                    noteDto.setRecordedByRole(roleName);
+                                    // Get displayPosition from user
+                                    String displayPosition = note.getRecordedBy().getDisplayPosition() != null
+                                            ? note.getRecordedBy().getDisplayPosition().name()
+                                            : "UNKNOWN";
+                                    noteDto.setRecordedByDisplayPosition(displayPosition);
                                 }
                                 return noteDto;
                             })

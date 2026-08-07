@@ -1,5 +1,6 @@
 package com.anucode.dispensary.dtos;
 
+import com.anucode.dispensary.entities.DisplayPosition;
 import lombok.*;
 
 import java.math.BigDecimal;
@@ -20,6 +21,7 @@ public class UserResponseDto {
     private String phone;
     private List<String> roles;
     private List<String> permissions;
+    private DisplayPosition displayPosition;
     private BigDecimal doctorCharge;
     private UUID tenantId;
     private LocalDateTime createdAt;

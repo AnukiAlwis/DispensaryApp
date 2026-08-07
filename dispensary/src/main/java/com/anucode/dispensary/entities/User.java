@@ -63,6 +63,10 @@ public class User {
     @Column(name = "must_reset_password")
     private Boolean mustResetPassword = false;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "display_position")
+    private DisplayPosition displayPosition;
+
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
