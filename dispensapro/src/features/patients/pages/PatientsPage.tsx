@@ -14,10 +14,13 @@ import { Patient } from "../types";
 import VisitIcon from "@mui/icons-material/TransferWithinAStation";
 import { useNavigate } from "react-router-dom";
 import CreateVisitForm from "../../visits/components/CreateVisitForm";
+import { useHasPermission } from "../../../hooks/usePermissions";
 
 export default function PatientsPage() {
   const { patients, loading, addPatient, editPatient, fetchPatients } =
     usePatients();
+
+  const canEditPatient = useHasPermission("PATIENT_EDIT");
 
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
@@ -109,14 +112,14 @@ export default function PatientsPage() {
       <PageHeader
         title="Patients"
         subtitle="Manage patient records, contact details and visit history."
-        action={{
+        action={canEditPatient ? {
           label: "Add Patient",
           onClick: () => {
             setEditingPatient(null);
             setOpen(true);
           },
           icon: <AddIcon />,
-        }}
+        } : undefined}
       />
 
       <SectionCard>
@@ -139,7 +142,7 @@ export default function PatientsPage() {
           <DataTable
             columns={columns}
             rows={filteredPatients}
-            onEdit={handleEdit}
+            onEdit={canEditPatient ? handleEdit : undefined}
             customActions={customActions}
             emptyText="No patients found."
           />

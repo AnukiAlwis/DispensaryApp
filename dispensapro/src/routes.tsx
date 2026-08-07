@@ -13,11 +13,16 @@ import PrescriptionDispensingPage from "./features/dispensing/pages/Prescription
 
 // Auth pages
 import LoginPage from "./pages/LoginPage";
+import AccessDeniedPage from "./pages/AccessDeniedPage";
 
 export const router = createBrowserRouter([
   {
     path: "/login",
     element: <LoginPage />,
+  },
+  {
+    path: "/access-denied",
+    element: <AccessDeniedPage />,
   },
   {
     path: "/",
@@ -28,14 +33,14 @@ export const router = createBrowserRouter([
     ), // Protected layout with sidebar + top summary
     children: [
       { index: true, element: <Navigate to="/patients" replace /> }, // default redirect
-      { path: "patients", element: <PatientsPage /> },
-      { path: "visits", element: <VisitsPage /> },
-      { path: "consults", element: <ConsultsPage /> },
-      { path: "dispensing", element: <PrescriptionDispensingPage /> },
+      { path: "patients", element: <ProtectedRoute requiredPermission="PATIENT_VIEW"><PatientsPage /></ProtectedRoute> },
+      { path: "visits", element: <ProtectedRoute requiredPermission="VISIT_VIEW"><VisitsPage /></ProtectedRoute> },
+      { path: "consults", element: <ProtectedRoute requiredPermission="CONSULT_VIEW"><ConsultsPage /></ProtectedRoute> },
+      { path: "dispensing", element: <ProtectedRoute requiredPermission="PRESCRIPTION_VIEW"><PrescriptionDispensingPage /></ProtectedRoute> },
 
-      { path: "pharmacy/medicine", element: <MedicineManagementPage /> },
-      { path: "pharmacy/distributors", element: <DistributorsPage /> },
-      { path: "pharmacy/supply", element: <SupplyManagementPage /> },
+      { path: "pharmacy/medicine", element: <ProtectedRoute requiredPermission="PHARMACY_VIEW"><MedicineManagementPage /></ProtectedRoute> },
+      { path: "pharmacy/distributors", element: <ProtectedRoute requiredPermission="PHARMACY_VIEW"><DistributorsPage /></ProtectedRoute> },
+      { path: "pharmacy/supply", element: <ProtectedRoute requiredPermission="PHARMACY_VIEW"><SupplyManagementPage /></ProtectedRoute> },
     ],
   },
 ]);

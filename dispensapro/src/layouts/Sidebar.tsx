@@ -20,6 +20,8 @@ import FrontHandIcon from "@mui/icons-material/FrontHand";
 import { Link, useLocation } from "react-router-dom";
 import { useState } from "react";
 import CheckInDialog from "../features/visits/components/CheckInDialog";
+import { Can } from "../components/Can";
+import { useHasPermission } from "../hooks/usePermissions";
 import "./Sidebar.css";
 
 const drawerWidth = 260;
@@ -39,21 +41,28 @@ export default function Sidebar({ isMobile, open, onToggle }: SidebarProps) {
   const location = useLocation();
   const [openPharmacy, setOpenPharmacy] = useState(false);
   const [checkInOpen, setCheckInOpen] = useState(false);
+  const canViewQueue = useHasPermission("QUEUE_VIEW");
+  const canManageQueue = useHasPermission("QUEUE_MANAGE");
+  const canCheckIn = canViewQueue && canManageQueue;
+  const canViewPharmacy = useHasPermission("PHARMACY_VIEW");
+  const canManagePharmacy = useHasPermission("PHARMACY_MANAGE");
+  const canAccessPharmacy = canViewPharmacy && canManagePharmacy;
   const handleTogglePharmacy = () => setOpenPharmacy((prev) => !prev);
 
   const navLinks = [
-    { label: "Patients", path: "/patients", icon: <PeopleIcon /> },
+    { label: "Patients", path: "/patients", icon: <PeopleIcon />, permission: "PATIENT_VIEW" },
     {
       label: "Pharmacy",
       icon: <LocalPharmacyIcon />,
+      permission: "PHARMACY_VIEW",
       children: [
-        { label: "Medicine Management", path: "/pharmacy/medicine" },
-        { label: "Distributors", path: "/pharmacy/distributors" },
-        { label: "Supply Management", path: "/pharmacy/supply" },
+        { label: "Medicine Management", path: "/pharmacy/medicine", permission: "PHARMACY_MANAGE" },
+        { label: "Distributors", path: "/pharmacy/distributors", permission: "PHARMACY_MANAGE" },
+        { label: "Supply Management", path: "/pharmacy/supply", permission: "PHARMACY_MANAGE" },
       ],
     },
-    { label: "Dispense & Billing", path: "/dispensing", icon: <LocalPharmacyIcon /> },
-    { label: "Consults", path: "/consults", icon: <AssignmentIcon /> },
+    { label: "Dispense & Billing", path: "/dispensing", icon: <LocalPharmacyIcon />, permission: "PRESCRIPTION_DISPENSE" },
+    { label: "Consults", path: "/consults", icon: <AssignmentIcon />, permission: "CONSULT_VIEW" },
   ];
 
   const drawerContent = (
@@ -82,44 +91,46 @@ export default function Sidebar({ isMobile, open, onToggle }: SidebarProps) {
           if (!link.children) {
             const isActive = location.pathname === link.path;
             return (
-              <ListItem key={link.path} disablePadding sx={{ mb: 0.5 }}>
-                <ListItemButton
-                  component={Link}
-                  to={link.path}
-                  selected={isActive}
-                  onClick={() => isMobile && onToggle()}
-                  sx={{
-                    borderRadius: "10px",
-                    py: 1,
-                    px: 1.5,
-                    transition: "all 0.2s ease",
-                    color: isActive ? SIDEBAR_ACTIVE_TEXT : SIDEBAR_TEXT,
-                    bgcolor: isActive ? SIDEBAR_ACTIVE_BG : "transparent",
-                    "&:hover": {
-                      bgcolor: isActive ? SIDEBAR_ACTIVE_BG : SIDEBAR_HOVER_BG,
-                      color: "#fff",
-                    },
-                    "&.Mui-selected": {
-                      bgcolor: SIDEBAR_ACTIVE_BG,
-                      color: SIDEBAR_ACTIVE_TEXT,
+              <Can key={link.path} permission={link.permission}>
+                <ListItem disablePadding sx={{ mb: 0.5 }}>
+                  <ListItemButton
+                    component={Link}
+                    to={link.path}
+                    selected={isActive}
+                    onClick={() => isMobile && onToggle()}
+                    sx={{
+                      borderRadius: "10px",
+                      py: 1,
+                      px: 1.5,
+                      transition: "all 0.2s ease",
+                      color: isActive ? SIDEBAR_ACTIVE_TEXT : SIDEBAR_TEXT,
+                      bgcolor: isActive ? SIDEBAR_ACTIVE_BG : "transparent",
                       "&:hover": {
-                        bgcolor: SIDEBAR_ACTIVE_BG,
+                        bgcolor: isActive ? SIDEBAR_ACTIVE_BG : SIDEBAR_HOVER_BG,
+                        color: "#fff",
                       },
-                    },
-                  }}
-                >
-                  <Box className="sidebar-icon" sx={{ color: "inherit" }}>
-                    {link.icon}
-                  </Box>
-                  <ListItemText
-                    primary={link.label}
-                    primaryTypographyProps={{
-                      fontSize: "0.9rem",
-                      fontWeight: isActive ? 600 : 500,
+                      "&.Mui-selected": {
+                        bgcolor: SIDEBAR_ACTIVE_BG,
+                        color: SIDEBAR_ACTIVE_TEXT,
+                        "&:hover": {
+                          bgcolor: SIDEBAR_ACTIVE_BG,
+                        },
+                      },
                     }}
-                  />
-                </ListItemButton>
-              </ListItem>
+                  >
+                    <Box className="sidebar-icon" sx={{ color: "inherit" }}>
+                      {link.icon}
+                    </Box>
+                    <ListItemText
+                      primary={link.label}
+                      primaryTypographyProps={{
+                        fontSize: "0.9rem",
+                        fontWeight: isActive ? 600 : 500,
+                      }}
+                    />
+                  </ListItemButton>
+                </ListItem>
+              </Can>
             );
           }
 
@@ -128,102 +139,114 @@ export default function Sidebar({ isMobile, open, onToggle }: SidebarProps) {
             link.children?.some((child) => location.pathname === child.path) ||
             openPharmacy;
 
-          return (
-            <Box key={link.label}>
-              <ListItem disablePadding sx={{ mb: 0.5 }}>
-                <ListItemButton
-                  onClick={handleTogglePharmacy}
-                  sx={{
-                    py: 1,
-                    px: 1.5,
-                    transition: "all 0.2s ease",
-                    color: isActiveParent ? SIDEBAR_ACTIVE_TEXT : SIDEBAR_TEXT,
-                    bgcolor: isActiveParent ? SIDEBAR_ACTIVE_BG : "transparent",
-                    "&:hover": {
-                      bgcolor: isActiveParent ? SIDEBAR_ACTIVE_BG : SIDEBAR_HOVER_BG,
-                      color: "#fff",
-                    },
-                  }}
-                >
-                  <Box className="sidebar-icon" sx={{ color: "inherit" }}>
-                    {link.icon}
-                  </Box>
-                  <ListItemText
-                    primary={link.label}
-                    primaryTypographyProps={{
-                      fontSize: "0.9rem",
-                      fontWeight: isActiveParent ? 600 : 500,
-                    }}
-                  />
-                  {openPharmacy ? <ExpandLessIcon /> : <ExpandMoreIcon />}
-                </ListItemButton>
-              </ListItem>
+          if (link.label === "Pharmacy" && !canAccessPharmacy) {
+            return null;
+          }
 
-              <Collapse in={openPharmacy} timeout="auto" unmountOnExit>
-                <List component="div" disablePadding>
-                  {link.children.map((child) => {
-                    const isActive = location.pathname === child.path;
-                    return (
-                      <ListItem key={child.path} disablePadding sx={{ mb: 0.5 }}>
-                        <ListItemButton
-                          component={Link}
-                          to={child.path}
-                          selected={isActive}
-                          onClick={() => isMobile && onToggle()}
-                          sx={{
-                            pl: 5.5,
-                            py: 0.8,
-                            mx: 1,
-                            transition: "all 0.2s ease",
-                            color: isActive ? SIDEBAR_ACTIVE_TEXT : SIDEBAR_TEXT,
-                            bgcolor: isActive ? SIDEBAR_ACTIVE_BG : "transparent",
-                            "&:hover": {
-                              bgcolor: isActive ? SIDEBAR_ACTIVE_BG : SIDEBAR_HOVER_BG,
-                              color: "#fff",
-                            },
-                          }}
-                        >
-                          <ListItemText
-                            primary={child.label}
-                            primaryTypographyProps={{
-                              fontSize: "0.85rem",
-                              fontWeight: isActive ? 600 : 500,
-                            }}
-                          />
-                        </ListItemButton>
-                      </ListItem>
-                    );
-                  })}
-                </List>
-              </Collapse>
-            </Box>
+          return (
+            <Can key={link.label} permission={link.permission}>
+              <Box>
+                <ListItem disablePadding sx={{ mb: 0.5 }}>
+                  <ListItemButton
+                    onClick={handleTogglePharmacy}
+                    sx={{
+                      py: 1,
+                      px: 1.5,
+                      transition: "all 0.2s ease",
+                      color: isActiveParent ? SIDEBAR_ACTIVE_TEXT : SIDEBAR_TEXT,
+                      bgcolor: isActiveParent ? SIDEBAR_ACTIVE_BG : "transparent",
+                      "&:hover": {
+                        bgcolor: isActiveParent ? SIDEBAR_ACTIVE_BG : SIDEBAR_HOVER_BG,
+                        color: "#fff",
+                      },
+                    }}
+                  >
+                    <Box className="sidebar-icon" sx={{ color: "inherit" }}>
+                      {link.icon}
+                    </Box>
+                    <ListItemText
+                      primary={link.label}
+                      primaryTypographyProps={{
+                        fontSize: "0.9rem",
+                        fontWeight: isActiveParent ? 600 : 500,
+                      }}
+                    />
+                    {openPharmacy ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+                  </ListItemButton>
+                </ListItem>
+
+                <Collapse in={openPharmacy} timeout="auto" unmountOnExit>
+                  <List component="div" disablePadding>
+                    {link.children.map((child) => {
+                      const isActive = location.pathname === child.path;
+                      return (
+                        <Can key={child.path} permission={child.permission}>
+                          <ListItem disablePadding sx={{ mb: 0.5 }}>
+                            <ListItemButton
+                              component={Link}
+                              to={child.path}
+                              selected={isActive}
+                              onClick={() => isMobile && onToggle()}
+                              sx={{
+                                pl: 5.5,
+                                py: 0.8,
+                                mx: 1,
+                                transition: "all 0.2s ease",
+                                color: isActive ? SIDEBAR_ACTIVE_TEXT : SIDEBAR_TEXT,
+                                bgcolor: isActive ? SIDEBAR_ACTIVE_BG : "transparent",
+                                "&:hover": {
+                                  bgcolor: isActive ? SIDEBAR_ACTIVE_BG : SIDEBAR_HOVER_BG,
+                                  color: "#fff",
+                                },
+                              }}
+                            >
+                              <ListItemText
+                                primary={child.label}
+                                primaryTypographyProps={{
+                                  fontSize: "0.85rem",
+                                  fontWeight: isActive ? 600 : 500,
+                                }}
+                              />
+                            </ListItemButton>
+                          </ListItem>
+                        </Can>
+                      );
+                    })}
+                  </List>
+                </Collapse>
+              </Box>
+            </Can>
           );
         })}
       </List>
 
       {/* Bottom Buttons */}
       <Box className="sidebar-footer" sx={{ bgcolor: "rgba(0,0,0,0.15)", borderColor: "rgba(255,255,255,0.08)" }}>
-        <Button
-          variant="contained"
-          className="sidebar-btn checkin-btn"
-          fullWidth
-          startIcon={<FrontHandIcon />}
-          sx={{ my: 0.6, bgcolor: "#1D4ED8", "&:hover": { bgcolor: "#2563EB" } }}
-          onClick={() => setCheckInOpen(true)}
-        >
-          Check-In
-        </Button>
-        <Button
-          variant="contained"
-          className="sidebar-btn LocalPharmacy-btn"
-          fullWidth
-          startIcon={<LocalPharmacyIcon />}
-          component={Link}
-          to="/dispensing"
-          sx={{ my: 0.6, bgcolor: "#0F766E", "&:hover": { bgcolor: "#115E59" } }}
-        >
-          Dispense
-        </Button>
+        {canCheckIn && (
+          <Button
+            variant="contained"
+            className="sidebar-btn checkin-btn"
+            fullWidth
+            startIcon={<FrontHandIcon />}
+            sx={{ my: 0.6, bgcolor: "#1D4ED8", "&:hover": { bgcolor: "#2563EB" } }}
+            onClick={() => setCheckInOpen(true)}
+          >
+            Check-In
+          </Button>
+        )}
+        <Can permission="PRESCRIPTION_DISPENSE">
+          <Button
+            variant="contained"
+            className="sidebar-btn LocalPharmacy-btn"
+            fullWidth
+            startIcon={<LocalPharmacyIcon />}
+            component={Link}
+            to="/dispensing"
+            sx={{ my: 0.6, bgcolor: "#0F766E", "&:hover": { bgcolor: "#115E59" } }}
+          >
+            Dispense
+          </Button>
+        </Can>
       </Box>
 
       <CheckInDialog open={checkInOpen} onClose={() => setCheckInOpen(false)} />

@@ -16,7 +16,7 @@ interface IdleQueueCardProps {
   loading: boolean;
   error: string | null;
   onRefresh: () => void;
-  onStartConsultation: (queue: Queue) => void;
+  onStartConsultation?: (queue: Queue) => void;
   // onResumeConsultation disabled: doctor does not navigate away or refresh during a session.
 }
 
@@ -99,7 +99,8 @@ export default function IdleQueueCard({
           variant="contained"
           size="large"
           startIcon={<PlayArrowIcon />}
-          onClick={() => onStartConsultation(nextWaitingQueue)}
+          onClick={() => onStartConsultation && onStartConsultation(nextWaitingQueue)}
+          disabled={!onStartConsultation}
           sx={{
             px: 3,
             py: 1.5,

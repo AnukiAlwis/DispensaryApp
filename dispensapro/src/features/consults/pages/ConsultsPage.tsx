@@ -18,6 +18,7 @@ import { Prescription, Bill, PrescriptionItem } from "../types";
 import { Visit } from "../../visits/types";
 import { useConsultation } from "../hooks/useConsultation";
 import { useBilling } from "../hooks/useBilling";
+import { useHasPermission } from "../../../hooks/usePermissions";
 import IdleQueueCard from "../components/IdleQueueCard";
 import ActivePatientHeader from "../components/ActivePatientHeader";
 import PastVisitsAccordion from "../components/PastVisitsAccordion";
@@ -33,6 +34,10 @@ export default function ConsultsPage() {
   const session = useSelector((state: RootState) => state.consultationSession);
   const user = useSelector((state: RootState) => state.user.userDetails);
   const doctorId = user?.id || getUserIdFromToken() || "";
+
+  const canCreateConsult = useHasPermission("CONSULT_CREATE");
+  const canEditConsult = useHasPermission("CONSULT_EDIT");
+  const canAddDiscounts = useHasPermission("DISCOUNTS_ADD");
 
   const [status, setStatus] = useState<"idle" | "active" | "completed">("idle");
   const [queues, setQueues] = useState<Queue[]>([]);
@@ -334,7 +339,7 @@ export default function ConsultsPage() {
           loading={isQueueLoading}
           error={queueError}
           onRefresh={fetchQueues}
-          onStartConsultation={handleStartConsultation}
+          onStartConsultation={canCreateConsult ? handleStartConsultation : undefined}
           // onResumeConsultation={handleResumeConsultation} // Disabled: no resume flow.
         />
       )}
@@ -386,7 +391,8 @@ export default function ConsultsPage() {
                 onCalculate={handleCalculate}
                 doctorDiscountPct={session.doctorDiscountPct}
                 pharmacyDiscountPct={session.pharmacyDiscountPct}
-                onDiscountsChange={(d, p) => dispatch(setDiscounts({ doctorDiscountPct: d, pharmacyDiscountPct: p }))}
+                onDiscountsChange={canAddDiscounts ? (d, p) => dispatch(setDiscounts({ doctorDiscountPct: d, pharmacyDiscountPct: p })) : undefined}
+                canEditDiscounts={canAddDiscounts}
               />
             </SectionCard>
           )}

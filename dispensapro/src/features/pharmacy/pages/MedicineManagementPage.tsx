@@ -6,6 +6,7 @@ import DataTable, { Column, CustomAction } from "../../../components/DataTable";
 import DialogModal from "../../../components/DialogModal";
 import MedicineForm from "../components/MedicineForm";
 import useMedicine from "../hooks/useMedicine";
+import { useHasPermission } from "../../../hooks/usePermissions";
 import { Medicine, MedicineFormValues } from "../types";
 
 const MEDICINE_COLUMNS: Column[] = [
@@ -46,6 +47,7 @@ const MEDICINE_COLUMNS: Column[] = [
 export default function MedicinePage() {
   const { medicines, addMedicine, fetchMedicines, loading, error } =
     useMedicine();
+  const canManagePharmacy = useHasPermission("PHARMACY_MANAGE");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
 
@@ -89,14 +91,16 @@ export default function MedicinePage() {
         gap={2}
       >
         <Typography variant="h5">Medicine Inventory Management</Typography>
-        <Button
-          variant="contained"
-          onClick={() => {
-            setIsModalOpen(true);
-          }}
-        >
-          Add Medicine
-        </Button>
+        {canManagePharmacy && (
+          <Button
+            variant="contained"
+            onClick={() => {
+              setIsModalOpen(true);
+            }}
+          >
+            Add Medicine
+          </Button>
+        )}
       </Box>
 
       {/* Medicine List Table */}

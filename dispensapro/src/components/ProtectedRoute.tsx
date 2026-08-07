@@ -6,10 +6,10 @@ import { RootState } from '../store';
 import { getTokenFromStore } from '../utils/auth';
 import { getMe, UserDto } from '../services/authApiService';
 import { setUserDetails } from '../store/userSlice';
-import { UserRole } from '../types/enums';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
+  requiredPermission?: string;
 }
 
 const mapUserDtoToUserDetails = (user: UserDto) => ({
@@ -18,14 +18,15 @@ const mapUserDtoToUserDetails = (user: UserDto) => ({
   fullName: user.fullName,
   email: user.email ?? '',
   phone: user.phone ?? '',
-  role: user.role as UserRole,
+  roles: user.roles || [],
+  permissions: user.permissions || [],
   doctorCharge: user.doctorCharge,
   tenantId: user.tenantId,
   createdAt: user.createdAt,
   updatedAt: user.updatedAt,
 });
 
-const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
+const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, requiredPermission }) => {
   const dispatch = useDispatch();
   const token = getTokenFromStore();
   const userDetails = useSelector((state: RootState) => state.user.userDetails);
@@ -82,6 +83,14 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
         <CircularProgress />
       </Box>
     );
+  }
+
+  // Check for required permission
+  if (requiredPermission && userDetails) {
+    const hasPermission = userDetails.permissions?.includes(requiredPermission);
+    if (!hasPermission) {
+      return <Navigate to="/access-denied" replace />;
+    }
   }
 
   return <>{children}</>;

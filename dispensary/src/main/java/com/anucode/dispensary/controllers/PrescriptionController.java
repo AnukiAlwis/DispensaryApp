@@ -8,10 +8,12 @@ import com.anucode.dispensary.dtos.PrescriptionResponseDto;
 import com.anucode.dispensary.dtos.PrescriptionItemRequestDto;
 import com.anucode.dispensary.dtos.PrescriptionItemResponseDto;
 import com.anucode.dispensary.dtos.PrescriptionStatusUpdateDto;
+import com.anucode.dispensary.security.Permissions;
 import com.anucode.dispensary.services.PrescriptionService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -25,6 +27,7 @@ public class PrescriptionController {
     private final PrescriptionService prescriptionService;
 
     @PostMapping
+    @PreAuthorize("hasAuthority('" + Permissions.CONSULT_CREATE + "')")
     public ResponseEntity<UUID> createPrescription(@Valid @RequestBody PrescriptionRequestDto request) {
         UUID tenantId = UUID.fromString(TenantContext.getTenantId());
         UUID currentUserId = TenantContext.getCurrentUser();
@@ -33,12 +36,14 @@ public class PrescriptionController {
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasAuthority('" + Permissions.PRESCRIPTION_VIEW + "')")
     public ResponseEntity<PrescriptionResponseDto> getPrescription(@PathVariable UUID id) {
         UUID tenantId = UUID.fromString(TenantContext.getTenantId());
         return ResponseEntity.ok(prescriptionService.getPrescription(tenantId, id));
     }
 
     @PostMapping("/{id}/items")
+    @PreAuthorize("hasAuthority('" + Permissions.CONSULT_EDIT + "')")
     public ResponseEntity<UUID> addPrescriptionItem(@PathVariable UUID id,
                                                     @Valid @RequestBody PrescriptionItemRequestDto request) {
         UUID tenantId = UUID.fromString(TenantContext.getTenantId());
@@ -47,12 +52,14 @@ public class PrescriptionController {
     }
 
     @GetMapping("/{id}/items")
+    @PreAuthorize("hasAuthority('" + Permissions.PRESCRIPTION_VIEW + "')")
     public ResponseEntity<List<PrescriptionItemResponseDto>> getPrescriptionItems(@PathVariable UUID id) {
         UUID tenantId = UUID.fromString(TenantContext.getTenantId());
         return ResponseEntity.ok(prescriptionService.getPrescriptionItems(tenantId, id));
     }
 
     @PutMapping("/{id}/status")
+    @PreAuthorize("hasAuthority('" + Permissions.CONSULT_EDIT + "') or hasAuthority('" + Permissions.PRESCRIPTION_DISPENSE + "')")
     public ResponseEntity<PrescriptionResponseDto> updatePrescriptionStatus(@PathVariable UUID id,
                                                                             @Valid @RequestBody PrescriptionStatusUpdateDto request) {
         UUID tenantId = UUID.fromString(TenantContext.getTenantId());
@@ -60,12 +67,14 @@ public class PrescriptionController {
     }
 
     @GetMapping
+    @PreAuthorize("hasAuthority('" + Permissions.PRESCRIPTION_VIEW + "')")
     public ResponseEntity<PrescriptionResponseDto> getPrescriptionByVisitId(@RequestParam UUID visitId) {
         UUID tenantId = UUID.fromString(TenantContext.getTenantId());
         return ResponseEntity.ok(prescriptionService.getPrescriptionByVisitId(tenantId, visitId));
     }
 
     @GetMapping("/current-serving")
+    @PreAuthorize("hasAuthority('" + Permissions.QUEUE_VIEW + "') or hasAuthority('" + Permissions.PHARMACY_MANAGE + "')")
     public ResponseEntity<CurrentServingPrescriptionDto> getCurrentServing() {
         UUID tenantId = UUID.fromString(TenantContext.getTenantId());
         CurrentServingPrescriptionDto result = prescriptionService.getCurrentServing(tenantId);
@@ -76,12 +85,14 @@ public class PrescriptionController {
     }
 
     @GetMapping("/up-next")
+    @PreAuthorize("hasAuthority('" + Permissions.QUEUE_VIEW + "') or hasAuthority('" + Permissions.PHARMACY_MANAGE + "')")
     public ResponseEntity<List<CurrentServingPrescriptionDto>> getUpNext() {
         UUID tenantId = UUID.fromString(TenantContext.getTenantId());
         return ResponseEntity.ok(prescriptionService.getUpNext(tenantId));
     }
 
     @GetMapping("/{id}/medicines")
+    @PreAuthorize("hasAuthority('" + Permissions.PRESCRIPTION_VIEW + "')")
     public ResponseEntity<List<PrescriptionMedicineDto>> getPrescriptionMedicines(@PathVariable UUID id) {
         UUID tenantId = UUID.fromString(TenantContext.getTenantId());
         return ResponseEntity.ok(prescriptionService.getPrescriptionMedicines(tenantId, id));

@@ -3,10 +3,12 @@ package com.anucode.dispensary.controllers;
 import com.anucode.dispensary.config.TenantContext;
 import com.anucode.dispensary.dtos.MedicineRequestDto;
 import com.anucode.dispensary.dtos.MedicineResponseDto;
+import com.anucode.dispensary.security.Permissions;
 import com.anucode.dispensary.services.MedicineService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
@@ -22,6 +24,7 @@ public class MedicineController {
     private final MedicineService medicineService;
 
     @PostMapping
+    @PreAuthorize("hasAuthority('" + Permissions.PHARMACY_MANAGE + "')")
     public ResponseEntity<UUID> addMedicine(@Valid @RequestBody MedicineRequestDto request) {
         UUID tenantId = UUID.fromString(TenantContext.getTenantId());
         UUID createdById = TenantContext.getCurrentUser();
@@ -37,6 +40,7 @@ public class MedicineController {
     }
 
     @GetMapping
+    @PreAuthorize("hasAuthority('" + Permissions.PHARMACY_VIEW + "')")
     public ResponseEntity<List<MedicineResponseDto>> listMedicines() {
         UUID tenantId = UUID.fromString(TenantContext.getTenantId());
         return ResponseEntity.ok(medicineService.listMedicines(tenantId));

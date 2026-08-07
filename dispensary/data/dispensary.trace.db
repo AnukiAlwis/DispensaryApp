@@ -2597,3 +2597,15 @@ Caused by: org.h2.jdbc.JdbcSQLNonTransientConnectionException: The connection wa
 	at org.h2.message.DbException.getJdbcSQLException(DbException.java:690)
 	at org.h2.message.DbException.getJdbcSQLException(DbException.java:489)
 	... 16 more
+2026-08-05 16:49:48.994119+05:30 jdbc[13]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Syntax error in SQL statement "[*]DESCRIBE app_user"; expected "DELETE, DROP"; SQL statement:
+DESCRIBE app_user [42001-232]
+2026-08-05 16:49:56.821270+05:30 jdbc[13]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Syntax error in SQL statement "[*]DESCRIBE APP_USER"; expected "DELETE, DROP"; SQL statement:
+DESCRIBE APP_USER [42001-232]
+2026-08-05 16:50:02.812459+05:30 jdbc[13]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Syntax error in SQL statement "[*]DESCRIBE APP_USER"; expected "DELETE, DROP"; SQL statement:
+DESCRIBE APP_USER [42001-232]
+2026-08-05 16:50:03.514336+05:30 jdbc[13]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Syntax error in SQL statement "[*]DESCRIBE APP_USER"; expected "DELETE, DROP"; SQL statement:
+DESCRIBE APP_USER [42001-232]

@@ -83,7 +83,7 @@ export default function TopBar({ isMobile, onToggleSidebar }: TopBarProps) {
                 {user?.fullName || 'User'}
               </Typography>
               <Typography variant="caption" sx={{ color: "rgba(255, 255, 255, 0.7)" }}>
-                {user?.role || 'Role'}
+                {user?.roles?.join(', ') || 'No roles'}
               </Typography>
             </Stack>
 

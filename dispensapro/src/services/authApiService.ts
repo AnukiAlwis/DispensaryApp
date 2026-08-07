@@ -17,7 +17,8 @@ export interface UserDto {
   fullName: string;
   email: string;
   phone: string;
-  role: string;
+  roles: string[];
+  permissions: string[];
   doctorCharge?: number;
   tenantId?: string;
   createdAt?: string;

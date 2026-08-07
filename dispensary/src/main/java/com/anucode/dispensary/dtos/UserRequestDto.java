@@ -1,6 +1,6 @@
 package com.anucode.dispensary.dtos;
 
-import com.anucode.dispensary.entities.User;
+import com.anucode.dispensary.entities.Role;
 import jakarta.validation.constraints.*;
 import lombok.*;
 
@@ -33,7 +33,7 @@ public class UserRequestDto {
     private String phone;
 
     @NotNull
-    private User.Role role;
+    private Role role;
 
     private BigDecimal doctorCharge;
 
@@ -41,13 +41,13 @@ public class UserRequestDto {
 
     @AssertTrue(message = "Doctor charge must be null unless role is DOCTOR")
     public boolean isDoctorChargeValid() {
-        return role == User.Role.DOCTOR || doctorCharge == null;
+        return role == null || !"DOCTOR".equals(role.getName()) || doctorCharge != null;
     }
 
     @AssertTrue(message = "Doctor charge is invalid.")
     public boolean isDoctorChargeInRange() {
         // if not a doctor → always valid, don’t change behaviour
-        if (role != User.Role.DOCTOR) {
+        if (role == null || !"DOCTOR".equals(role.getName())) {
             return true;
         }
 

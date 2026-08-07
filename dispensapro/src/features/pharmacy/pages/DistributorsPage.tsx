@@ -5,6 +5,7 @@ import DataTable, { Column } from "../../../components/DataTable";
 import DialogModal from "../../../components/DialogModal";
 import DistributorForm from "../components/DistributorForm";
 import useDistributor from "../hooks/useDistributor";
+import { useHasPermission } from "../../../hooks/usePermissions";
 import { Distributor, DistributorFormValues } from "../types";
 
 const DISTRIBUTOR_COLUMNS: Column[] = [
@@ -16,6 +17,7 @@ const DISTRIBUTOR_COLUMNS: Column[] = [
 
 export default function DistributorPage() {
   const { distributors, addDistributor } = useDistributor();
+  const canManagePharmacy = useHasPermission("PHARMACY_MANAGE");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
 
@@ -47,9 +49,11 @@ export default function DistributorPage() {
         gap={2}
       >
         <Typography variant="h5">Distributor Management</Typography>
-        <Button variant="contained" onClick={() => setIsModalOpen(true)}>
-          Add Distributor
-        </Button>
+        {canManagePharmacy && (
+          <Button variant="contained" onClick={() => setIsModalOpen(true)}>
+            Add Distributor
+          </Button>
+        )}
       </Box>
 
       <ElevatedCard>
