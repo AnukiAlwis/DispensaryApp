@@ -1,4 +1,4 @@
-import { TextField, Box, MenuItem, Button, Typography, Stack } from "@mui/material";
+import { TextField, Box, MenuItem, Button, Typography, Stack, Alert } from "@mui/material";
 import { useState } from "react";
 import { Patient } from "../types";
 
@@ -7,6 +7,8 @@ interface PatientFormProps {
   onSubmit: (values: Omit<Patient, "id">) => void;
   onCancel?: () => void;
   submitLabel?: string;
+  submitError?: string | null;
+  onClearError?: () => void;
 }
 
 export default function PatientForm({
@@ -14,6 +16,8 @@ export default function PatientForm({
   onSubmit,
   onCancel,
   submitLabel = "Save Patient",
+  submitError,
+  onClearError,
 }: PatientFormProps) {
   const [form, setForm] = useState<Omit<Patient, "id">>({
     firstName: initialValues?.firstName || "",
@@ -28,6 +32,10 @@ export default function PatientForm({
   const handleChange =
     (field: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement>) => {
       setForm({ ...form, [field]: e.target.value });
+      // Clear error when user changes name or contact fields
+      if ((field === 'firstName' || field === 'lastName' || field === 'contact') && onClearError) {
+        onClearError();
+      }
     };
 
   const getMaxDate = () => {
@@ -38,6 +46,8 @@ export default function PatientForm({
 
   const isFormValid =
     form.firstName.trim() && form.lastName.trim() && form.contact.trim() && form.dob;
+
+  const isButtonDisabled = !isFormValid || !!submitError;
 
   return (
     <Box display="flex" flexDirection="column" gap={3}>
@@ -117,6 +127,16 @@ export default function PatientForm({
         </Box>
       </Box>
 
+      {/* Error Display */}
+      {submitError && (
+        <Alert 
+          severity="error" 
+          onClose={onClearError ? onClearError : undefined}
+        >
+          {submitError}
+        </Alert>
+      )}
+
       {/* Footer Actions */}
       <Stack direction="row" spacing={1.5} justifyContent="flex-end" mt={1}>
         {onCancel && (
@@ -128,7 +148,7 @@ export default function PatientForm({
           variant="contained"
           color="primary"
           onClick={() => onSubmit(form)}
-          disabled={!isFormValid}
+          disabled={isButtonDisabled}
         >
           {submitLabel}
         </Button>

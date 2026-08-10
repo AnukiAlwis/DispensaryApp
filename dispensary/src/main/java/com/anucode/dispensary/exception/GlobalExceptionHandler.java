@@ -159,6 +159,13 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(error, HttpStatus.NOT_FOUND);
     }
 
+    @ExceptionHandler(PatientAlreadyExistsException.class)
+    public ResponseEntity<Map<String, String>> handlePatientAlreadyExists(PatientAlreadyExistsException ex) {
+        Map<String, String> error = new HashMap<>();
+        error.put("error", ex.getMessage());
+        return new ResponseEntity<>(error, HttpStatus.CONFLICT); // 409
+    }
+
 
     // Generic Fallback
     @ExceptionHandler(Exception.class)

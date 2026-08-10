@@ -96,11 +96,11 @@ apiClient.interceptors.response.use(
     // Default behavior: show snackbar unless disabled
     if (error.config?.headers?.["x-suppress-snackbar"] !== true) {
       const message =
-        error.response?.data?.message ||
         error.response?.data?.error ||
+        error.response?.data?.message ||
         error.message ||
         "An error occurred";
-      showSnackbar(message);
+      showSnackbar(message, { severity: "error" });
     }
     return Promise.reject(error);
   }

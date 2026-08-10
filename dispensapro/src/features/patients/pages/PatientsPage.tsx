@@ -15,6 +15,7 @@ import VisitIcon from "@mui/icons-material/TransferWithinAStation";
 import { useNavigate } from "react-router-dom";
 import CreateVisitForm from "../../visits/components/CreateVisitForm";
 import { useHasPermission } from "../../../hooks/usePermissions";
+import { showSnackbar } from "../../../utils/showSnackbar";
 
 export default function PatientsPage() {
   const { patients, loading, addPatient, editPatient, fetchPatients } =
@@ -27,6 +28,7 @@ export default function PatientsPage() {
   const [editingPatient, setEditingPatient] = useState<Patient | null>(null);
   const [openVisitModal, setOpenVisitModal] = useState(false);
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   const [search, setSearch] = useState("");
 
@@ -88,6 +90,7 @@ export default function PatientsPage() {
   ];
 
   const handleSubmit = async (values: Omit<Patient, "id">) => {
+    setSubmitError(null);
     try {
       if (editingPatient) {
         await editPatient(editingPatient.id!, values);
@@ -97,7 +100,18 @@ export default function PatientsPage() {
       await fetchPatients();
       setOpen(false);
       setEditingPatient(null);
-    } catch (err) {
+      setSubmitError(null);
+    } catch (err: any) {
+      // Extract error message from response
+      const message =
+        err?.response?.data?.error ||
+        err?.response?.data?.message ||
+        err?.message ||
+        "Failed to save patient";
+      setSubmitError(message);
+      // Show snackbar for global feedback
+      showSnackbar(message, { severity: "error" });
+      // Modal stays open to allow user to fix the error
       console.error("Error saving patient:", err);
     }
   };
@@ -105,6 +119,11 @@ export default function PatientsPage() {
   const handleClosePatientModal = () => {
     setOpen(false);
     setEditingPatient(null);
+    setSubmitError(null);
+  };
+
+  const handleClearError = () => {
+    setSubmitError(null);
   };
 
   return (
@@ -170,6 +189,8 @@ export default function PatientsPage() {
           onSubmit={handleSubmit}
           onCancel={handleClosePatientModal}
           submitLabel={editingPatient ? "Save Changes" : "Save Patient"}
+          submitError={submitError}
+          onClearError={handleClearError}
         />
       </DialogModal>
 

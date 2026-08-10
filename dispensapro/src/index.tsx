@@ -9,6 +9,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { router } from "./routes";
 import { theme } from "./styles/theme";
 import App from "./App";
+import GlobalSnackbar from "./components/GlobalSnackbar";
 
 const queryClient = new QueryClient();
 
@@ -22,6 +23,7 @@ root.render(
         <ThemeProvider theme={theme}>
           <CssBaseline />
           <RouterProvider router={router} />
+          <GlobalSnackbar />
         </ThemeProvider>
       </QueryClientProvider>
     </Provider>

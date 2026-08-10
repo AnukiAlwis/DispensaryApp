@@ -13,4 +13,8 @@ public interface PatientRepository extends JpaRepository<Patient, UUID> {
     List<Patient> findByTenantIdAndFirstNameContainingIgnoreCaseOrLastNameContainingIgnoreCase(
             UUID tenantId, String firstName, String lastName
     );
+
+    boolean existsByTenantIdAndFirstNameIgnoreCaseAndLastNameIgnoreCaseAndContactIgnoreCase(
+            UUID tenantId, String firstName, String lastName, String contact
+    );
 }

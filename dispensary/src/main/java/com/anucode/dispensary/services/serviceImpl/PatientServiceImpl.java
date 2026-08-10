@@ -5,6 +5,7 @@ import com.anucode.dispensary.dtos.PatientResponseDto;
 import com.anucode.dispensary.entities.Patient;
 import com.anucode.dispensary.entities.Tenant;
 import com.anucode.dispensary.entities.User;
+import com.anucode.dispensary.exception.PatientAlreadyExistsException;
 import com.anucode.dispensary.exception.PatientNotFoundException;
 import com.anucode.dispensary.exception.TenantMismatchException;
 import com.anucode.dispensary.exception.UserNotFoundException;
@@ -44,6 +45,18 @@ public class PatientServiceImpl implements PatientService {
 
     @Override
     public String createPatient(UUID tenantId, PatientRequestDto requestDto, UUID createdById) {
+        // Check for duplicate patient (case-insensitive name + phone combination)
+        boolean exists = patientRepository.existsByTenantIdAndFirstNameIgnoreCaseAndLastNameIgnoreCaseAndContactIgnoreCase(
+                tenantId,
+                requestDto.getFirstName(),
+                requestDto.getLastName(),
+                requestDto.getContact()
+        );
+
+        if (exists) {
+            throw new PatientAlreadyExistsException("patient name already exists, please check before creating new patient record!");
+        }
+
         Patient patient = modelMapper.map(requestDto, Patient.class);
         patient.setId(null);
         Tenant tenant = tenantRepository.findById(tenantId)
