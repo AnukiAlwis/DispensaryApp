@@ -33,7 +33,7 @@ The authorization system implements the following core requirements:
   - Consultations: `CONSULT_VIEW`, `CONSULT_CREATE`, `CONSULT_EDIT`
   - Dispensing: `PRESCRIPTION_DISPENSE`, `PRESCRIPTION_VIEW`
   - Pharmacy: `PHARMACY_MANAGE`, `PHARMACY_VIEW`
-  - Queues: `QUEUE_MANAGE`, `QUEUE_VIEW`
+  - Queues: `QUEUE_MANAGE`, `QUEUE_VIEW`, `QUEUE_CHECKIN`
   - Visits: `VISIT_VIEW`, `VISIT_EDIT`
   - Users: `USER_MANAGE`, `USER_VIEW`
   - Roles: `ROLE_MANAGE`
@@ -52,6 +52,7 @@ The following role-permission mappings are the authoritative source of truth for
 | VISIT_EDIT | ❌ | ✅ | ✅ | ✅ | ✅ |
 | QUEUE_VIEW | ❌ | ✅ | ❌ | ❌ | ✅ |
 | QUEUE_MANAGE | ❌ | ✅ | ✅ | ❌ | ✅ |
+| QUEUE_CHECKIN | ❌ | ❌ | ❌ | ❌ | ✅ |
 | CONSULT_VIEW | ❌ | ✅ | ❌ | ❌ | ❌ |
 | CONSULT_CREATE | ❌ | ✅ | ❌ | ❌ | ❌ |
 | CONSULT_EDIT | ❌ | ✅ | ❌ | ❌ | ❌ |
@@ -71,7 +72,7 @@ The following role-permission mappings are the authoritative source of truth for
 - **DOCTOR**: Full patient management, consultations, visits, discounts, queue management, prescription viewing, pharmacy viewing(medicine view), user viewing (14 permissions)
 - **NURSE**: Patient management, visit management, queue management, user viewing (7 permissions)
 - **PHARMACIST**: Prescription viewing and dispensing, pharmacy management, pharmacy viewing, patient viewing, visit management, user viewing (8 permissions)
-- **RECEPTIONIST**: Patient management, visit management, queue viewing and management, user viewing (8 permissions)
+- **RECEPTIONIST**: Patient management, visit management, queue viewing, management and check-in, user viewing (9 permissions)
 
 **Custom Roles**: Tenant-specific roles that can be created, modified, and deleted
 - Associated with a specific tenant (`tenant_id` not null)
@@ -215,7 +216,7 @@ private List<String> computeEffectivePermissions(User user) {
 | **Queues** | | | |
 | Manage queues | QUEUE_MANAGE | DOCTOR, NURSE, RECEPTIONIST, ADMIN | POST/PUT/DELETE /queues |
 | View queues | QUEUE_VIEW | DOCTOR, RECEPTIONIST | GET /queues |
-| Check-in patients | QUEUE_VIEW and QUEUE_MANAGE | DOCTOR, NURSE, RECEPTIONIST, ADMIN | PATCH /queue/{id}/check-in |
+| Check-in patients | QUEUE_CHECKIN | RECEPTIONIST | PATCH /queue/{id}/check-in |
 | **Visits** | | | |
 | View visits | VISIT_VIEW | DOCTOR, NURSE, PHARMACIST, RECEPTIONIST | GET /visits |
 | Edit visits | VISIT_EDIT | DOCTOR, NURSE, PHARMACIST, RECEPTIONIST, ADMIN | PUT /visits/{id} |

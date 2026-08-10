@@ -20,9 +20,7 @@ import { Queue } from "../../Queues/types";
 export default function VisitsPage() {
   const navigate = useNavigate();
   const canEditVisit = useHasPermission("VISIT_EDIT");
-  const canViewQueue = useHasPermission("QUEUE_VIEW");
-  const canManageQueue = useHasPermission("QUEUE_MANAGE");
-  const canCheckIn = canViewQueue && canManageQueue;
+  const canCheckIn = useHasPermission("QUEUE_CHECKIN");
   const [searchParams] = useSearchParams();
   const patientId = searchParams.get("patientId") || "";
 

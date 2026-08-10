@@ -54,7 +54,7 @@ export default function VisitSummaryCard({
             Doctor
           </Typography>
           <Typography variant="body1" fontWeight={600}>
-            {doctorName}
+            Dr. {doctorName}
           </Typography>
         </Box>
         <Divider orientation="vertical" flexItem sx={{ display: { xs: "none", md: "block" } }} />

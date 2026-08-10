@@ -10,9 +10,9 @@ The Doctor Dispensary Application is a comprehensive clinical management system 
 **Role**: Front desk management and patient coordination
 **Permissions**: Create patients, create visits, manage queue check-ins, mark no-shows
 
-### 2. Nurse  
+### 2. Nurse
 **Role**: Patient care coordination and clinical support
-**Permissions**: Create visits, add clinical notes, check-in patients, assist queue management
+**Permissions**: Create visits, add clinical notes, assist queue management
 
 ### 3. Doctor
 **Role**: Medical consultation and prescription management
@@ -85,8 +85,8 @@ The Doctor Dispensary Application is a comprehensive clinical management system 
 ---
 
 #### Story 4: Patient Check-in Process
-**As a** Nurse/Receptionist  
-**I want to** mark patients as checked-in when they arrive at the premises  
+**As a** Receptionist
+**I want to** mark patients as checked-in when they arrive at the premises
 **So that** doctors know who is waiting for consultation
 
 **Acceptance Criteria:**

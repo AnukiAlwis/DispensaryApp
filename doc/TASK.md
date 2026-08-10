@@ -19,8 +19,9 @@ This document outlines the complete development roadmap for the Doctor Dispensar
 
 ### User Roles & Permissions
 - **Doctor**: Start serving patients, prescribe medicines, apply discounts
-- **Nurse**: Create visits, add clinical notes, check-in patients
+- **Nurse**: Create visits, add clinical notes
 - **Pharmacist**: Dispense medicines, manage inventory, process payments
+- **Receptionist**: Check-in patients, manage patient records
 - **Admin**: View reports, manage users, basic financial oversight
 
 ## Current Implementation Status
@@ -104,9 +105,9 @@ This document outlines the complete development roadmap for the Doctor Dispensar
 - Display queue entries by doctor with queue numbers
 - Status badges: BOOKED, CHECKED_IN_WAITING, IN_PROGRESS, SERVED, NO_SHOW
 - Action buttons based on user role:
-  - Nurse: Check-in patients
+  - Receptionist: Check-in patients
   - Doctor: Start serving, mark as served
-  - Receptionist: Mark no-show, remove from queue
+  - Nurse: Mark no-show, remove from queue
 - Auto-refresh queue status every 30 seconds
 - Patient information display with visit details
 

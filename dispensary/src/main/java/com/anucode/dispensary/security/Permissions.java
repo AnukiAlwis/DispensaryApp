@@ -25,6 +25,7 @@ public final class Permissions {
     // Queues feature permissions
     public static final String QUEUE_MANAGE = "QUEUE_MANAGE";
     public static final String QUEUE_VIEW = "QUEUE_VIEW";
+    public static final String QUEUE_CHECKIN = "QUEUE_CHECKIN";
 
     // Visits feature permissions
     public static final String VISIT_VIEW = "VISIT_VIEW";

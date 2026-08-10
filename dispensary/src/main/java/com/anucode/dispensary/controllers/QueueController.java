@@ -40,7 +40,7 @@ public class QueueController {
     }
 
     @PatchMapping("/{id}/check-in")
-    @PreAuthorize("hasAuthority('" + Permissions.QUEUE_MANAGE + "')")
+    @PreAuthorize("hasAuthority('" + Permissions.QUEUE_CHECKIN + "')")
     public ResponseEntity<QueueResponseDto> checkIn(@PathVariable UUID id) {
         UUID tenantId = UUID.fromString(TenantContext.getTenantId());
         UUID currentUserId = TenantContext.getCurrentUser();

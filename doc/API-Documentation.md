@@ -902,6 +902,8 @@ Location: /queue/{queueId}
 
 Marks a patient as checked-in for consultation.
 
+**Required Permission:** `QUEUE_CHECKIN`
+
 **Path Parameters:**
 - `id` (UUID) - Queue entry ID
 
@@ -923,6 +925,7 @@ Marks a patient as checked-in for consultation.
 **Status Codes:**
 - `200` - Patient checked-in successfully
 - `404` - Queue entry not found
+- `403` - User lacks QUEUE_CHECKIN permission
 
 ---
 

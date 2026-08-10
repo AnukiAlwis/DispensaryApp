@@ -43,7 +43,7 @@ export default function Sidebar({ isMobile, open, onToggle }: SidebarProps) {
   const [checkInOpen, setCheckInOpen] = useState(false);
   const canViewQueue = useHasPermission("QUEUE_VIEW");
   const canManageQueue = useHasPermission("QUEUE_MANAGE");
-  const canCheckIn = canViewQueue && canManageQueue;
+  const canCheckIn = useHasPermission("QUEUE_CHECKIN");
   const canViewPharmacy = useHasPermission("PHARMACY_VIEW");
   const canManagePharmacy = useHasPermission("PHARMACY_MANAGE");
   const canAccessPharmacy = canViewPharmacy && canManagePharmacy;

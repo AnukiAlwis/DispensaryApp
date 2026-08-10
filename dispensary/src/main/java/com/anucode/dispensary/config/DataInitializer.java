@@ -128,6 +128,7 @@ public class DataInitializer implements CommandLineRunner {
         // Queues feature permissions
         createPermissionIfNotExists("QUEUE_MANAGE", "Manage patient queues");
         createPermissionIfNotExists("QUEUE_VIEW", "View queue information");
+        createPermissionIfNotExists("QUEUE_CHECKIN", "Check-in patients to queue");
 
         // Visits feature permissions
         createPermissionIfNotExists("VISIT_VIEW", "View visit information");
@@ -187,7 +188,7 @@ public class DataInitializer implements CommandLineRunner {
         Role receptionistRole = createSystemRoleIfNotExists("RECEPTIONIST", Set.of(
             "PATIENT_VIEW", "PATIENT_EDIT", "PATIENT_DELETE",
             "VISIT_VIEW", "VISIT_EDIT",
-            "QUEUE_VIEW", "QUEUE_MANAGE",
+            "QUEUE_VIEW", "QUEUE_MANAGE", "QUEUE_CHECKIN",
             "USER_VIEW"
         ));
 
