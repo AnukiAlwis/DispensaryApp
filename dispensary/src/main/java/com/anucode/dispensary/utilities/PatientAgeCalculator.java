@@ -9,22 +9,30 @@ public final class PatientAgeCalculator {
     }
 
     /**
-     * Calculates the age in years based on the provided date of birth.
+     * Calculates the age based on the provided date of birth.
+     * Returns formatted string showing years, months, or days depending on age.
      * @param dob The patient's date of birth (LocalDate).
-     * @return The age in full years, or null if dob is null or in the future.
+     * @return Formatted age string (e.g., "25 yrs", "8 mos", "15 days"), or null if dob is null.
      */
-    public static Integer calculateAge(LocalDate dob) {
+    public static String calculateAge(LocalDate dob) {
         if (dob == null) {
             return null;
         }
 
         LocalDate today = LocalDate.now();
+        Period period = Period.between(dob, today);
 
-        // Ensure DOB is not in the future
-        if (dob.isAfter(today)) {
-            return 0;
+        // If the patient is 1 year or older, show years
+        if (period.getYears() >= 1) {
+            return period.getYears() + " yrs";
         }
 
-        return Period.between(dob, today).getYears();
+        // If the patient is 1 month or older but less than 1 year, show months
+        if (period.getMonths() >= 1) {
+            return period.getMonths() + " mos";
+        }
+
+        // If less than 1 month, show days
+        return period.getDays() + " days";
     }
 }

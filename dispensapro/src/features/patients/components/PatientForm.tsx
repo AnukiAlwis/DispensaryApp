@@ -30,8 +30,14 @@ export default function PatientForm({
       setForm({ ...form, [field]: e.target.value });
     };
 
+  const getMaxDate = () => {
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    return yesterday.toISOString().split('T')[0];
+  };
+
   const isFormValid =
-    form.firstName.trim() && form.lastName.trim() && form.contact.trim();
+    form.firstName.trim() && form.lastName.trim() && form.contact.trim() && form.dob;
 
   return (
     <Box display="flex" flexDirection="column" gap={3}>
@@ -65,7 +71,11 @@ export default function PatientForm({
             value={form.dob}
             onChange={handleChange("dob")}
             fullWidth
+            required
             InputLabelProps={{ shrink: true }}
+            inputProps={{
+              max: getMaxDate()
+            }}
           />
           <TextField
             label="Gender"

@@ -68,7 +68,7 @@ public class PatientServiceImpl implements PatientService {
             throw new TenantMismatchException("Tenant mismatch");
         }
         PatientResponseDto dto = modelMapper.map(patient, PatientResponseDto.class);
-        dto.setAge(PatientAgeCalculator.calculateAge(patient.getDob()).toString());
+        dto.setAge(PatientAgeCalculator.calculateAge(patient.getDob()));
         return dto;
     }
 
@@ -102,8 +102,8 @@ public class PatientServiceImpl implements PatientService {
         return patients.stream()
                 .map(p -> modelMapper.map(p, PatientResponseDto.class))
                 .peek(dto -> {
-                    Integer age = PatientAgeCalculator.calculateAge(dto.getDob());
-                    dto.setAge(age.toString() + " yrs");
+                    String age = PatientAgeCalculator.calculateAge(dto.getDob());
+                    dto.setAge(age);
                 })
                 .collect(Collectors.toList());
     }
