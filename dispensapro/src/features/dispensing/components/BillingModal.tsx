@@ -222,7 +222,7 @@ export default function BillingModal({
                     <Box key={note.id} sx={{ mb: 1 }}>
                       <Typography variant="body2" sx={{ fontWeight: 600, display: "inline" }}>
                         {note.recordedByFullName}
-                        {note.recordedByRole && ` (${note.recordedByRole})`}:
+                        {note.recordedByDisplayPosition && ` (${note.recordedByDisplayPosition})`}:
                       </Typography>{" "}
                       <Typography variant="body1" sx={{ display: "inline" }}>
                         {note.note}

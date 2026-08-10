@@ -65,7 +65,7 @@ export default function PastVisitsAccordion({
               <Box key={note.id}>
                 <Typography variant="body2" sx={{ fontWeight: 600, display: "inline" }}>
                   {note.recordedByFullName}
-                  {note.recordedByRole && ` (${note.recordedByRole})`}
+                  {note.recordedByDisplayPosition && ` (${note.recordedByDisplayPosition})`}
                   :{" "}
                 </Typography>
                 <Typography variant="body2" sx={{ display: "inline" }}>

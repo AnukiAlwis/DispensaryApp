@@ -287,7 +287,10 @@ public class BillServiceImpl implements BillService {
         User user = userRepository.findById(currentUserId)
                 .orElseThrow(() -> new UserNotFoundException("User not found"));
 
-        if (!"DOCTOR".equalsIgnoreCase(user.getRole().toString())) {
+        boolean isDoctor = user.getRoles().stream()
+                .anyMatch(role -> "DOCTOR".equalsIgnoreCase(role.getName()));
+        
+        if (!isDoctor) {
             throw new PermissionDeniedException("Only doctors can update discounts");
         }
 

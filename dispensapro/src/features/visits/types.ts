@@ -25,7 +25,7 @@ export interface VisitNote {
   note: string;
   recordedById: string;
   recordedByFullName: string;
-  recordedByRole: string;
+  recordedByDisplayPosition: string;
 }
 
 export interface Visit {

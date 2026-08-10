@@ -43,7 +43,9 @@ const LoginPage: React.FC = () => {
         fullName: response.user.fullName,
         email: response.user.email ?? '',
         phone: response.user.phone ?? '',
-        role: response.user.role as any, // Type assertion for UserRole
+        roles: response.user.roles || [],
+        permissions: response.user.permissions || [],
+        displayPosition: response.user.displayPosition,
         doctorCharge: response.user.doctorCharge,
         tenantId: response.user.tenantId,
         createdAt: response.user.createdAt,

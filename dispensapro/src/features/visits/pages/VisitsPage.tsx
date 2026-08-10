@@ -8,6 +8,7 @@ import { useNavigate } from "react-router-dom";
 import DialogModal from "../../../components/DialogModal";
 import CreateVisitForm from "../components/CreateVisitForm";
 import { usePatients } from "../../patients/hooks/usePatients";
+import { useHasPermission } from "../../../hooks/usePermissions";
 import CheckInIcon from "@mui/icons-material/FrontHand";
 import AddIcon from "@mui/icons-material/Add";
 import PatientIdentityCell from "../../../components/PatientIdentityCell";
@@ -18,6 +19,10 @@ import { Queue } from "../../Queues/types";
 
 export default function VisitsPage() {
   const navigate = useNavigate();
+  const canEditVisit = useHasPermission("VISIT_EDIT");
+  const canViewQueue = useHasPermission("QUEUE_VIEW");
+  const canManageQueue = useHasPermission("QUEUE_MANAGE");
+  const canCheckIn = canViewQueue && canManageQueue;
   const [searchParams] = useSearchParams();
   const patientId = searchParams.get("patientId") || "";
 
@@ -172,20 +177,24 @@ export default function VisitsPage() {
           </Box>
 
           <Stack direction="row" spacing={1.5}>
-            <Button
-              variant="outlined"
-              startIcon={<CheckInIcon />}
-              onClick={() => navigate("/", { state: { openCheckIn: true } })}
-            >
-              Check-In
-            </Button>
-            <Button
-              variant="contained"
-              startIcon={<AddIcon />}
-              onClick={handleCreateVisit}
-            >
-              Add Visit
-            </Button>
+            {canCheckIn && (
+              <Button
+                variant="outlined"
+                startIcon={<CheckInIcon />}
+                onClick={() => navigate("/", { state: { openCheckIn: true } })}
+              >
+                Check-In
+              </Button>
+            )}
+            {canEditVisit && (
+              <Button
+                variant="contained"
+                startIcon={<AddIcon />}
+                onClick={handleCreateVisit}
+              >
+                Add Visit
+              </Button>
+            )}
           </Stack>
         </Box>
       </SectionCard>
@@ -220,6 +229,7 @@ export default function VisitsPage() {
                     doctorName={v.doctorName || "Unassigned"}
                     status={v.status}
                     onOpenVisit={() => console.log("Open visit", v.id)}
+                    canCheckIn={canCheckIn}
                   />
                 ))}
               </Stack>

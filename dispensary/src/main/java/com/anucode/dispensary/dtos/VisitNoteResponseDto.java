@@ -12,7 +12,7 @@ public class VisitNoteResponseDto {
     private String note;
     private UUID recordedById;
     private String recordedByFullName;
-    private String recordedByRole;
+    private String recordedByDisplayPosition;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

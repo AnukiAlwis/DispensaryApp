@@ -2,7 +2,6 @@ package com.anucode.dispensary.services;
 
 import com.anucode.dispensary.dtos.UserRequestDto;
 import com.anucode.dispensary.dtos.UserResponseDto;
-import com.anucode.dispensary.entities.User;
 
 import java.util.List;
 import java.util.UUID;
@@ -15,6 +14,10 @@ public interface UserService {
 
     UserResponseDto updateUser(UUID tenantId, UUID userId, UserRequestDto requestDto);
 
-    List<UserResponseDto> getAllUsers(UUID tenantId, List<User.Role> roles);
+    List<UserResponseDto> getAllUsers(UUID tenantId, List<String> roles);
+
+    void assignRole(UUID tenantId, UUID userId, UUID roleId);
+
+    void unassignRole(UUID tenantId, UUID userId, UUID roleId);
 }
 

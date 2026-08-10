@@ -4,11 +4,12 @@ package com.anucode.dispensary.controllers;
 import com.anucode.dispensary.config.TenantContext;
 import com.anucode.dispensary.dtos.UserRequestDto;
 import com.anucode.dispensary.dtos.UserResponseDto;
-import com.anucode.dispensary.entities.User;
+import com.anucode.dispensary.security.Permissions;
 import com.anucode.dispensary.services.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
@@ -25,6 +26,7 @@ public class UserController {
 
 
     @PostMapping
+    @PreAuthorize("hasAuthority('" + Permissions.USER_MANAGE + "')")
     public ResponseEntity<UserResponseDto> createUser(@RequestBody @Valid UserRequestDto request) {
         UUID tenantId = UUID.fromString(TenantContext.getTenantId());
         UserResponseDto createdUser = userService.createUser(tenantId, request);
@@ -41,12 +43,14 @@ public class UserController {
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasAuthority('" + Permissions.USER_VIEW + "')")
     public ResponseEntity<UserResponseDto> getUser(@PathVariable UUID id) {
         UUID tenantId = UUID.fromString(TenantContext.getTenantId());
         return ResponseEntity.ok(userService.getUserById(tenantId, id));
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasAuthority('" + Permissions.USER_MANAGE + "')")
     public ResponseEntity<UserResponseDto> updateUser(
             @PathVariable UUID id,
             @Valid @RequestBody UserRequestDto requestDto) {
@@ -55,8 +59,9 @@ public class UserController {
     }
 
     @GetMapping
+    @PreAuthorize("hasAuthority('" + Permissions.USER_VIEW + "')")
     public ResponseEntity<List<UserResponseDto>> getAllUsers(
-            @RequestParam(required = false) List<User.Role> roles) {
+            @RequestParam(required = false) List<String> roles) {
         UUID tenantId = UUID.fromString(TenantContext.getTenantId());
         List<UserResponseDto> users = userService.getAllUsers(tenantId, roles);
         return ResponseEntity.ok(users);

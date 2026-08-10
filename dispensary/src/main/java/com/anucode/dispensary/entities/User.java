@@ -6,6 +6,8 @@ import lombok.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 
 @Entity
@@ -16,10 +18,6 @@ import java.util.UUID;
 @AllArgsConstructor
 @Builder
 public class User {
-
-    public enum Role {
-        DOCTOR, NURSE, RECEPTIONIST, PHARMACIST, ADMIN
-    }
 
     @Id
     @Column(name = "id", columnDefinition = "BINARY(16)")
@@ -35,9 +33,14 @@ public class User {
     @Column(name = "full_name", nullable = false)
     private String fullName;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "role", nullable = false)
-    private Role role;
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+        name = "user_role",
+        joinColumns = @JoinColumn(name = "user_id"),
+        inverseJoinColumns = @JoinColumn(name = "role_id")
+    )
+    @Builder.Default
+    private Set<Role> roles = new HashSet<>();
 
     @Column(name = "phone")
     private String phone;
@@ -59,6 +62,10 @@ public class User {
 
     @Column(name = "must_reset_password")
     private Boolean mustResetPassword = false;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "display_position")
+    private DisplayPosition displayPosition;
 
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;

@@ -1072,6 +1072,309 @@ Retrieves the current queue for a specific doctor.
 
 ---
 
+### Search Queue by Patient
+**GET** `/queue/search`
+
+Searches queue entries by patient name or phone number for today's date.
+
+**Query Parameters:**
+- `searchTerm` (String, required) - Search term (patient name or phone)
+
+**Response:**
+```json
+[
+  {
+    "id": "550e8400-e29b-41d4-a716-446655440000",
+    "patientId": "550e8400-e29b-41d4-a716-446655440001",
+    "doctorId": "550e8400-e29b-41d4-a716-446655440002",
+    "visitType": "CONSULTATION",
+    "priority": "NORMAL",
+    "status": "WAITING",
+    "queueNumber": 1,
+    "createdAt": "2024-01-15T09:00:00",
+    "updatedAt": "2024-01-15T09:00:00"
+  }
+]
+```
+
+**Status Codes:**
+- `200` - Queue search completed successfully
+
+---
+
+### Get Queue Entry by ID
+**GET** `/queue/{id}`
+
+Retrieves a specific queue entry by ID.
+
+**Path Parameters:**
+- `id` (UUID) - Queue entry ID
+
+**Response:**
+```json
+{
+  "id": "550e8400-e29b-41d4-a716-446655440000",
+  "patientId": "550e8400-e29b-41d4-a716-446655440001",
+  "doctorId": "550e8400-e29b-41d4-a716-446655440002",
+  "visitType": "CONSULTATION",
+  "priority": "NORMAL",
+  "status": "WAITING",
+  "queueNumber": 1,
+  "createdAt": "2024-01-15T09:00:00",
+  "updatedAt": "2024-01-15T09:00:00"
+}
+```
+
+**Status Codes:**
+- `200` - Queue entry retrieved successfully
+- `404` - Queue entry not found
+
+---
+
+## Role Management API
+
+### List Roles
+**GET** `/roles`
+
+Retrieves all roles (both system and tenant-specific).
+
+**Response:**
+```json
+[
+  {
+    "id": "550e8400-e29b-41d4-a716-446655440000",
+    "name": "ADMIN",
+    "isSystem": true,
+    "permissions": [
+      {
+        "id": "550e8400-e29b-41d4-a716-446655440001",
+        "code": "USER_MANAGE",
+        "description": "Manage users"
+      }
+    ]
+  }
+]
+```
+
+**Status Codes:**
+- `200` - Roles retrieved successfully
+
+---
+
+### Create Custom Role
+**POST** `/roles`
+
+Creates a new custom role for the tenant.
+
+**Request Body:**
+```json
+{
+  "name": "CUSTOM_ROLE",
+  "permissionCodes": ["PATIENT_VIEW", "PATIENT_EDIT"]
+}
+```
+
+**Response:**
+```json
+{
+  "id": "550e8400-e29b-41d4-a716-446655440000",
+  "name": "CUSTOM_ROLE",
+  "isSystem": false,
+  "permissions": [
+    {
+      "id": "550e8400-e29b-41d4-a716-446655440001",
+      "code": "PATIENT_VIEW",
+      "description": "View patients"
+    }
+  ]
+}
+```
+
+**Status Codes:**
+- `200` - Role created successfully
+- `400` - Invalid request data
+
+---
+
+### Update Custom Role
+**PUT** `/roles/{id}`
+
+Updates an existing custom role.
+
+**Path Parameters:**
+- `id` (UUID) - Role ID
+
+**Request Body:**
+```json
+{
+  "name": "CUSTOM_ROLE_UPDATED",
+  "permissionCodes": ["PATIENT_VIEW", "VISIT_VIEW"]
+}
+```
+
+**Response:**
+```json
+{
+  "id": "550e8400-e29b-41d4-a716-446655440000",
+  "name": "CUSTOM_ROLE_UPDATED",
+  "isSystem": false,
+  "permissions": [
+    {
+      "id": "550e8400-e29b-41d4-a716-446655440001",
+      "code": "PATIENT_VIEW",
+      "description": "View patients"
+    }
+  ]
+}
+```
+
+**Status Codes:**
+- `200` - Role updated successfully
+- `404` - Role not found
+- `400` - Invalid request data
+
+---
+
+### Delete Role
+**DELETE** `/roles/{id}`
+
+Deletes a custom role.
+
+**Path Parameters:**
+- `id` (UUID) - Role ID
+
+**Status Codes:**
+- `204` - Role deleted successfully
+- `404` - Role not found
+
+---
+
+### Attach Permissions to Role
+**POST** `/roles/{id}/permissions`
+
+Attaches permissions to a role.
+
+**Path Parameters:**
+- `id` (UUID) - Role ID
+
+**Request Body:**
+```json
+{
+  "permissionCodes": ["PATIENT_EDIT", "VISIT_EDIT"]
+}
+```
+
+**Response:**
+```json
+{
+  "id": "550e8400-e29b-41d4-a716-446655440000",
+  "name": "CUSTOM_ROLE",
+  "isSystem": false,
+  "permissions": [
+    {
+      "id": "550e8400-e29b-41d4-a716-446655440001",
+      "code": "PATIENT_EDIT",
+      "description": "Edit patients"
+    }
+  ]
+}
+```
+
+**Status Codes:**
+- `200` - Permissions attached successfully
+- `404` - Role not found
+- `400` - Invalid request data
+
+---
+
+### Detach Permissions from Role
+**DELETE** `/roles/{id}/permissions`
+
+Detaches permissions from a role.
+
+**Path Parameters:**
+- `id` (UUID) - Role ID
+
+**Request Body:**
+```json
+{
+  "permissionCodes": ["PATIENT_EDIT"]
+}
+```
+
+**Response:**
+```json
+{
+  "id": "550e8400-e29b-41d4-a716-446655440000",
+  "name": "CUSTOM_ROLE",
+  "isSystem": false,
+  "permissions": []
+}
+```
+
+**Status Codes:**
+- `200` - Permissions detached successfully
+- `404` - Role not found
+- `400` - Invalid request data
+
+---
+
+### List Permissions
+**GET** `/roles/permissions`
+
+Retrieves all available permissions in the system.
+
+**Response:**
+```json
+[
+  {
+    "id": "550e8400-e29b-41d4-a716-446655440000",
+    "code": "PATIENT_VIEW",
+    "description": "View patients"
+  },
+  {
+    "id": "550e8400-e29b-41d4-a716-446655440001",
+    "code": "PATIENT_EDIT",
+    "description": "Edit patients"
+  }
+]
+```
+
+**Status Codes:**
+- `200` - Permissions retrieved successfully
+
+---
+
+### Assign Role to User
+**POST** `/roles/users/{userId}/roles/{roleId}`
+
+Assigns a role to a user.
+
+**Path Parameters:**
+- `userId` (UUID) - User ID
+- `roleId` (UUID) - Role ID
+
+**Status Codes:**
+- `204` - Role assigned successfully
+- `404` - User or role not found
+
+---
+
+### Unassign Role from User
+**DELETE** `/roles/users/{userId}/roles/{roleId}`
+
+Unassigns a role from a user.
+
+**Path Parameters:**
+- `userId` (UUID) - User ID
+- `roleId` (UUID) - Role ID
+
+**Status Codes:**
+- `204` - Role unassigned successfully
+- `404` - User or role not found
+
+---
+
 ## Supply Management API
 
 ### Create Supply
@@ -1215,8 +1518,7 @@ Creates a new tenant (multi-tenant system setup).
   "id": "550e8400-e29b-41d4-a716-446655440000",
   "name": "City Hospital",
   "code": "CITY-HOSP-001",
-  "createdAt": "2024-01-15T08:00:00",
-  "updatedAt": "2024-01-15T08:00:00"
+  "createdAt": "2024-01-15T08:00:00"
 }
 ```
 
@@ -1238,8 +1540,7 @@ Retrieves all tenants in the system.
     "id": "550e8400-e29b-41d4-a716-446655440000",
     "name": "City Hospital",
     "code": "CITY-HOSP-001",
-    "createdAt": "2024-01-15T08:00:00",
-    "updatedAt": "2024-01-15T08:00:00"
+    "createdAt": "2024-01-15T08:00:00"
   }
 ]
 ```
@@ -1262,10 +1563,11 @@ Creates a new user account.
   "username": "johndoe",
   "email": "john.doe@hospital.com",
   "password": "SecurePass123!",
-  "firstName": "John",
-  "lastName": "Doe",
-  "role": "DOCTOR",
-  "phone": "+94771234567"
+  "fullName": "John Doe",
+  "phone": "+94771234567",
+  "roles": ["DOCTOR"],
+  "displayPosition": "DOCTOR",
+  "doctorCharge": 1500.00
 }
 ```
 
@@ -1278,11 +1580,14 @@ Location: /users/{userId}
 {
   "id": "550e8400-e29b-41d4-a716-446655440000",
   "username": "johndoe",
+  "fullName": "John Doe",
   "email": "john.doe@hospital.com",
-  "firstName": "John",
-  "lastName": "Doe",
-  "role": "DOCTOR",
   "phone": "+94771234567",
+  "roles": ["DOCTOR"],
+  "permissions": ["PATIENT_VIEW", "VISIT_EDIT"],
+  "displayPosition": "DOCTOR",
+  "doctorCharge": 1500.00,
+  "tenantId": "550e8400-e29b-41d4-a716-446655440001",
   "createdAt": "2024-01-15T08:00:00",
   "updatedAt": "2024-01-15T08:00:00"
 }
@@ -1307,11 +1612,14 @@ Retrieves user details by ID.
 {
   "id": "550e8400-e29b-41d4-a716-446655440000",
   "username": "johndoe",
+  "fullName": "John Doe",
   "email": "john.doe@hospital.com",
-  "firstName": "John",
-  "lastName": "Doe",
-  "role": "DOCTOR",
   "phone": "+94771234567",
+  "roles": ["DOCTOR"],
+  "permissions": ["PATIENT_VIEW", "VISIT_EDIT"],
+  "displayPosition": "DOCTOR",
+  "doctorCharge": 1500.00,
+  "tenantId": "550e8400-e29b-41d4-a716-446655440001",
   "createdAt": "2024-01-15T08:00:00",
   "updatedAt": "2024-01-15T08:00:00"
 }
@@ -1331,15 +1639,17 @@ Updates user information.
 **Path Parameters:**
 - `id` (UUID) - User ID
 
+**Note:** Username cannot be updated after creation.
+
 **Request Body:**
 ```json
 {
-  "username": "johndoe",
   "email": "john.doe@hospital.com",
-  "firstName": "John",
-  "lastName": "Smith",
-  "role": "DOCTOR",
-  "phone": "+94771234568"
+  "fullName": "John Smith",
+  "phone": "+94771234568",
+  "roles": ["DOCTOR"],
+  "displayPosition": "DOCTOR",
+  "doctorCharge": 1500.00
 }
 ```
 
@@ -1348,11 +1658,14 @@ Updates user information.
 {
   "id": "550e8400-e29b-41d4-a716-446655440000",
   "username": "johndoe",
+  "fullName": "John Smith",
   "email": "john.doe@hospital.com",
-  "firstName": "John",
-  "lastName": "Smith",
-  "role": "DOCTOR",
   "phone": "+94771234568",
+  "roles": ["DOCTOR"],
+  "permissions": ["PATIENT_VIEW", "VISIT_EDIT"],
+  "displayPosition": "DOCTOR",
+  "doctorCharge": 1500.00,
+  "tenantId": "550e8400-e29b-41d4-a716-446655440001",
   "createdAt": "2024-01-15T08:00:00",
   "updatedAt": "2024-01-15T09:00:00"
 }
@@ -1379,11 +1692,14 @@ Retrieves all users with optional role filtering.
   {
     "id": "550e8400-e29b-41d4-a716-446655440000",
     "username": "johndoe",
+    "fullName": "John Doe",
     "email": "john.doe@hospital.com",
-    "firstName": "John",
-    "lastName": "Doe",
-    "role": "DOCTOR",
     "phone": "+94771234567",
+    "roles": ["DOCTOR"],
+    "permissions": ["PATIENT_VIEW", "VISIT_EDIT"],
+    "displayPosition": "DOCTOR",
+    "doctorCharge": 1500.00,
+    "tenantId": "550e8400-e29b-41d4-a716-446655440001",
     "createdAt": "2024-01-15T08:00:00",
     "updatedAt": "2024-01-15T08:00:00"
   }
@@ -1392,6 +1708,30 @@ Retrieves all users with optional role filtering.
 
 **Status Codes:**
 - `200` - Users retrieved successfully
+
+---
+
+## Summary API
+
+### Get Today's Summary
+**GET** `/summary/today`
+
+Retrieves the daily summary for the current user (doctor) for today's date.
+
+**Response:**
+```json
+{
+  "date": "2024-01-15",
+  "totalPatients": 15,
+  "totalRevenue": 22500.00,
+  "totalDiscounts": 1500.00,
+  "completedVisits": 12,
+  "pendingVisits": 3
+}
+```
+
+**Status Codes:**
+- `200` - Summary retrieved successfully
 
 ---
 
@@ -1538,6 +1878,9 @@ Adds a clinical note to a visit.
 ```
 
 **Response:**
+```
+200 OK
+```
 ```json
 "550e8400-e29b-41d4-a716-446655440000"
 ```
@@ -1662,6 +2005,9 @@ All monetary values use decimal format with 2 decimal places (e.g., `1500.00`)
 - `DOCTOR` - Medical practitioner
 - `PHARMACIST` - Pharmacy staff
 - `RECEPTIONIST` - Front desk staff
+- `NURSE` - Nursing staff
+
+**Note:** Role management is handled through the Role Management API. See the Role Management API section for creating custom roles and managing role permissions.
 
 ---
 
@@ -1745,7 +2091,7 @@ Invalidates the refresh token and logs out the user.
 ```
 
 **Status Codes:**
-- `200` - Logout successful
+- `204` - Logout successful
 - `401` - Invalid refresh token
 
 #### Get Current User
@@ -1821,4 +2167,28 @@ Version information is included in response headers:
 
 ---
 
-*Last updated: January 15, 2024*
+*Last updated: August 7, 2026*
+
+---
+
+## Documentation Changes Summary
+
+This documentation has been updated to reflect the actual API implementation. Key changes include:
+
+### Added Sections:
+- **Role Management API**: Complete documentation for role CRUD operations, permission management, and user role assignments
+- **Summary API**: Daily summary endpoint for doctor statistics
+- **Queue Search**: Added queue search by patient name/phone endpoint
+- **Queue Get by ID**: Added endpoint to retrieve specific queue entries
+
+### Updated Sections:
+- **User Management API**: Updated DTOs to match actual implementation (fullName instead of firstName/lastName, roles array instead of single role, added permissions and displayPosition fields)
+- **Tenant Management API**: Updated DTOs to remove updatedAt field
+- **Authentication API**: Fixed logout response status code from 200 to 204
+- **User Roles**: Added NURSE role and reference to Role Management API for custom roles
+
+### Technical Corrections:
+- All API paths now match the actual controller mappings
+- Response structures align with actual DTO implementations
+- Status codes reflect actual HTTP responses from controllers
+- Added missing endpoints that exist in implementation but were not documented

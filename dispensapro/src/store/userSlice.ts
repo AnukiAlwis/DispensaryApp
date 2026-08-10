@@ -1,5 +1,4 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { UserRole } from '../types/enums';
 
 interface UserDetails {
   id: string;
@@ -7,7 +6,9 @@ interface UserDetails {
   fullName: string;
   email: string;
   phone: string;
-  role: UserRole;
+  roles: string[];
+  permissions: string[];
+  displayPosition?: string;
   doctorCharge?: number;
   tenantId?: string;
   createdAt?: string;

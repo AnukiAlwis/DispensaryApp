@@ -3,10 +3,12 @@ package com.anucode.dispensary.services.serviceImpl;
 
 import com.anucode.dispensary.dtos.UserRequestDto;
 import com.anucode.dispensary.dtos.UserResponseDto;
+import com.anucode.dispensary.entities.Role;
 import com.anucode.dispensary.entities.Tenant;
 import com.anucode.dispensary.entities.User;
 import com.anucode.dispensary.exception.TenantMismatchException;
 import com.anucode.dispensary.exception.UserNotFoundException;
+import com.anucode.dispensary.repos.RoleRepository;
 import com.anucode.dispensary.repos.TenantRepository;
 import com.anucode.dispensary.repos.UserRepository;
 import com.anucode.dispensary.services.UserService;
@@ -16,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -29,10 +32,13 @@ public class UserServiceImpl implements UserService {
 
     private final TenantRepository tenantRepository;
 
-    public UserServiceImpl(UserRepository userRepository, ModelMapper modelMapper, TenantRepository tenantRepository) {
+    private final RoleRepository roleRepository;
+
+    public UserServiceImpl(UserRepository userRepository, ModelMapper modelMapper, TenantRepository tenantRepository, RoleRepository roleRepository) {
         this.userRepository = userRepository;
         this.modelMapper = modelMapper;
         this.tenantRepository = tenantRepository;
+        this.roleRepository = roleRepository;
     }
 
     @Override
@@ -46,9 +52,17 @@ public class UserServiceImpl implements UserService {
                 .orElseThrow(() -> new TenantMismatchException("Tenant mismatch"));
         user.setTenant(tenant);
 
+        // Set roles from request
+        if (requestDto.getRoles() != null && !requestDto.getRoles().isEmpty()) {
+            user.setRoles(requestDto.getRoles());
+        }
+
+        // Set displayPosition from request
+        user.setDisplayPosition(requestDto.getDisplayPosition());
+
         user.setCreatedAt(LocalDateTime.now());
         userRepository.save(user);
-        return modelMapper.map(user, UserResponseDto.class);
+        return mapToDto(user);
     }
 
     @Override
@@ -58,7 +72,7 @@ public class UserServiceImpl implements UserService {
         if (!user.getTenant().getId().equals(tenantId)) {
             throw new TenantMismatchException("Tenant mismatch");
         }
-        return modelMapper.map(user, UserResponseDto.class);
+        return mapToDto(user);
     }
 
     @Override
@@ -81,37 +95,102 @@ public class UserServiceImpl implements UserService {
         if (requestDto.getPhone() != null) {
             existingUser.setPhone(requestDto.getPhone());
         }
-        if (requestDto.getRole() != null) {
-            existingUser.setRole(requestDto.getRole());
+        if (requestDto.getDoctorCharge() != null) {
+            existingUser.setDoctorCharge(requestDto.getDoctorCharge());
+        }
 
-            // DoctorCharge rule: must be null if role is not DOCTOR
-            if (requestDto.getRole() != User.Role.DOCTOR) {
-                existingUser.setDoctorCharge(null);
-            } else if (requestDto.getDoctorCharge() != null) {
-                existingUser.setDoctorCharge(requestDto.getDoctorCharge());
-            }
+        // Update roles if provided
+        if (requestDto.getRoles() != null && !requestDto.getRoles().isEmpty()) {
+            existingUser.setRoles(requestDto.getRoles());
+        }
+
+        // Update displayPosition if provided
+        if (requestDto.getDisplayPosition() != null) {
+            existingUser.setDisplayPosition(requestDto.getDisplayPosition());
         }
 
         existingUser.setUpdatedAt(LocalDateTime.now());
         userRepository.save(existingUser);
-        return modelMapper.map(existingUser, UserResponseDto.class);
+        return mapToDto(existingUser);
 
     }
 
     @Override
-    public List<UserResponseDto> getAllUsers(UUID tenantId, List<User.Role> roles) {
-        List<User> users;
+    public List<UserResponseDto> getAllUsers(UUID tenantId, List<String> roles) {
+        List<User> users = userRepository.findAllByTenantId(tenantId);
 
-        // filter from one or more roles if given
+        // Filter by roles if provided
         if (roles != null && !roles.isEmpty()) {
-            users = userRepository.findAllByTenantIdAndRoleIn(tenantId, roles);
-        } else {
-            users = userRepository.findAllByTenantId(tenantId);
+            users = users.stream()
+                    .filter(user -> user.getRoles().stream()
+                            .anyMatch(role -> roles.contains(role.getName())))
+                    .collect(Collectors.toList());
         }
 
         return users.stream()
-                .map(user -> modelMapper.map(user, UserResponseDto.class))
+                .map(this::mapToDto)
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public void assignRole(UUID tenantId, UUID userId, UUID roleId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException("User with ID " + userId + " not found"));
+
+        if (!user.getTenant().getId().equals(tenantId)) {
+            throw new TenantMismatchException("Tenant mismatch");
+        }
+
+        Role role = roleRepository.findById(roleId)
+                .orElseThrow(() -> new RuntimeException("Role with ID " + roleId + " not found"));
+
+        // Validate custom role's tenant matches user's tenant
+        if (role.getTenant() != null && !role.getTenant().getId().equals(tenantId)) {
+            throw new TenantMismatchException("Cannot assign role from different tenant");
+        }
+
+        user.getRoles().add(role);
+        userRepository.save(user);
+    }
+
+    @Override
+    public void unassignRole(UUID tenantId, UUID userId, UUID roleId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException("User with ID " + userId + " not found"));
+
+        if (!user.getTenant().getId().equals(tenantId)) {
+            throw new TenantMismatchException("Tenant mismatch");
+        }
+
+        Role role = roleRepository.findById(roleId)
+                .orElseThrow(() -> new RuntimeException("Role with ID " + roleId + " not found"));
+
+        // Prevent removing a user's last role
+        if (user.getRoles().size() <= 1) {
+            throw new IllegalStateException("Cannot remove user's last role");
+        }
+
+        user.getRoles().remove(role);
+        userRepository.save(user);
+    }
+
+    private UserResponseDto mapToDto(User user) {
+        UserResponseDto dto = modelMapper.map(user, UserResponseDto.class);
+        
+        // Map roles to role names
+        List<String> roleNames = user.getRoles().stream()
+                .map(Role::getName)
+                .collect(Collectors.toList());
+        dto.setRoles(roleNames);
+        
+        // Compute effective permissions (union across all roles)
+        Set<String> permissionCodes = user.getRoles().stream()
+                .flatMap(role -> role.getPermissions().stream())
+                .map(com.anucode.dispensary.entities.Permission::getCode)
+                .collect(Collectors.toSet());
+        dto.setPermissions(permissionCodes.stream().sorted().collect(Collectors.toList()));
+        
+        return dto;
     }
 }
 

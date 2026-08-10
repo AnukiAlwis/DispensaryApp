@@ -3,10 +3,12 @@ package com.anucode.dispensary.controllers;
 import com.anucode.dispensary.config.TenantContext;
 import com.anucode.dispensary.dtos.PatientRequestDto;
 import com.anucode.dispensary.dtos.PatientResponseDto;
+import com.anucode.dispensary.security.Permissions;
 import com.anucode.dispensary.services.PatientService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
@@ -22,6 +24,7 @@ public class PatientController {
     private final PatientService patientService;
 
     @PostMapping
+    @PreAuthorize("hasAuthority('" + Permissions.PATIENT_EDIT + "')")
     public ResponseEntity<String> createPatient(@Valid @RequestBody PatientRequestDto request) {
         UUID tenantId = UUID.fromString(TenantContext.getTenantId());
         UUID createdById = TenantContext.getCurrentUser();
@@ -36,12 +39,14 @@ public class PatientController {
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasAuthority('" + Permissions.PATIENT_VIEW + "')")
     public ResponseEntity<PatientResponseDto> getPatient(@PathVariable UUID id) {
         UUID tenantId = UUID.fromString(TenantContext.getTenantId());
         return ResponseEntity.ok(patientService.getPatientById(tenantId, id));
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasAuthority('" + Permissions.PATIENT_EDIT + "')")
     public ResponseEntity<PatientResponseDto> updatePatient(@PathVariable UUID id,
                                                             @Valid @RequestBody PatientRequestDto request) {
         UUID tenantId = UUID.fromString(TenantContext.getTenantId());
@@ -49,6 +54,7 @@ public class PatientController {
     }
 
     @GetMapping
+    @PreAuthorize("hasAuthority('" + Permissions.PATIENT_VIEW + "')")
     public ResponseEntity<List<PatientResponseDto>> searchPatients(@RequestParam String search) {
         UUID tenantId = UUID.fromString(TenantContext.getTenantId());
         return ResponseEntity.ok(patientService.searchPatients(tenantId, search));

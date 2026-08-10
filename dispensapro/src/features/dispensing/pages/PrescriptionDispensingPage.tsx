@@ -23,6 +23,7 @@ import {
   UpNextPrescription,
 } from "../types";
 import { hasActiveSession, clearState } from "../utils/preparationStorage";
+import { useHasPermission } from "../../../hooks/usePermissions";
 import MedicinePreparationModal from "../components/MedicinePreparationModal";
 import BillingModal from "../components/BillingModal";
 import ViewPrescriptionModal from "../components/ViewPrescriptionModal";
@@ -31,6 +32,7 @@ type WorkflowState = "idle" | "preparing" | "billing";
 
 export default function PrescriptionDispensingPage() {
   const theme = useTheme();
+  const canDispense = useHasPermission("PRESCRIPTION_DISPENSE");
   const [currentServing, setCurrentServing] =
     useState<CurrentServingPrescription | null>(null);
   const [upNext, setUpNext] = useState<UpNextPrescription[]>([]);
@@ -205,10 +207,13 @@ export default function PrescriptionDispensingPage() {
                 variant="contained"
                 size="large"
                 onClick={
-                  hasActiveSessionState
-                    ? handleContinueDispense
-                    : handleStartPreparing
+                  canDispense
+                    ? (hasActiveSessionState
+                        ? handleContinueDispense
+                        : handleStartPreparing)
+                    : undefined
                 }
+                disabled={!canDispense}
                 sx={{ ml: "auto" }}
               >
                 {hasActiveSessionState ? "Continue Dispense" : "Start Preparing 💊"}
@@ -263,8 +268,8 @@ export default function PrescriptionDispensingPage() {
                           <Button
                             size="small"
                             variant="contained"
-                            onClick={() => handleDispenseNow(prescription.id)}
-                            disabled={hasActiveSessionState}
+                            onClick={() => canDispense && handleDispenseNow(prescription.id)}
+                            disabled={!canDispense || hasActiveSessionState}
                           >
                             Dispense Now
                           </Button>

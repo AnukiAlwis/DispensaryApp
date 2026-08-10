@@ -15,7 +15,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -55,8 +57,11 @@ public class AuthServiceImpl implements AuthService {
             throw new RuntimeException("Invalid username or password");
         }
 
+        // Compute effective permissions
+        List<String> permissions = computeEffectivePermissions(user);
+
         // Generate tokens
-        String accessToken = jwtTokenService.generateAccessToken(user, tenant.getId());
+        String accessToken = jwtTokenService.generateAccessToken(user, tenant.getId(), permissions);
         String refreshToken = jwtTokenService.generateRefreshToken();
 
         // Create refresh session
@@ -64,12 +69,7 @@ public class AuthServiceImpl implements AuthService {
         refreshSessionService.create(user, refreshToken, deviceId);
 
         // Build response
-        UserDto userDto = UserDto.builder()
-                .id(user.getId())
-                .username(user.getUsername())
-                .fullName(user.getFullName())
-                .role(user.getRole().name())
-                .build();
+        UserDto userDto = buildUserDto(user, permissions);
 
         return AuthResponse.builder()
                 .accessToken(accessToken)
@@ -87,16 +87,14 @@ public class AuthServiceImpl implements AuthService {
         Tenant tenant = result.getSession().getTenant();
         String newRefreshToken = result.getToken();
 
+        // Compute effective permissions
+        List<String> permissions = computeEffectivePermissions(user);
+
         // Generate new access token
-        String accessToken = jwtTokenService.generateAccessToken(user, tenant.getId());
+        String accessToken = jwtTokenService.generateAccessToken(user, tenant.getId(), permissions);
 
         // Build response
-        UserDto userDto = UserDto.builder()
-                .id(user.getId())
-                .username(user.getUsername())
-                .fullName(user.getFullName())
-                .role(user.getRole().name())
-                .build();
+        UserDto userDto = buildUserDto(user, permissions);
 
         return AuthResponse.builder()
                 .accessToken(accessToken)
@@ -117,5 +115,29 @@ public class AuthServiceImpl implements AuthService {
         // In a real implementation, extract from User-Agent header or similar
         // For now, return a simple identifier
         return "web-client";
+    }
+
+    private List<String> computeEffectivePermissions(User user) {
+        // Union of permissions across all assigned roles
+        return user.getRoles().stream()
+                .flatMap(role -> role.getPermissions().stream())
+                .map(com.anucode.dispensary.entities.Permission::getCode)
+                .distinct()
+                .collect(Collectors.toList());
+    }
+
+    private UserDto buildUserDto(User user, List<String> permissions) {
+        List<String> roleNames = user.getRoles().stream()
+                .map(com.anucode.dispensary.entities.Role::getName)
+                .collect(Collectors.toList());
+
+        return UserDto.builder()
+                .id(user.getId())
+                .username(user.getUsername())
+                .fullName(user.getFullName())
+                .roles(roleNames)
+                .permissions(permissions)
+                .displayPosition(user.getDisplayPosition())
+                .build();
     }
 }

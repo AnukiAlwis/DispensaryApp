@@ -3,10 +3,12 @@ package com.anucode.dispensary.controllers;
 import com.anucode.dispensary.config.TenantContext;
 import com.anucode.dispensary.dtos.VisitRequestDto;
 import com.anucode.dispensary.dtos.VisitResponseDto;
+import com.anucode.dispensary.security.Permissions;
 import com.anucode.dispensary.services.VisitService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
@@ -22,6 +24,7 @@ public class VisitController {
     private final VisitService visitService;
 
     @PostMapping
+    @PreAuthorize("hasAuthority('" + Permissions.VISIT_EDIT + "')")
     public ResponseEntity<String> createVisit(@Valid @RequestBody VisitRequestDto request) {
         UUID tenantId = UUID.fromString(TenantContext.getTenantId());
         UUID currentUserId = TenantContext.getCurrentUser();
@@ -37,12 +40,14 @@ public class VisitController {
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasAuthority('" + Permissions.VISIT_VIEW + "')")
     public ResponseEntity<VisitResponseDto> getVisit(@PathVariable UUID id) {
         UUID tenantId = UUID.fromString(TenantContext.getTenantId());
         return ResponseEntity.ok(visitService.getVisitById(tenantId, id));
     }
 
     @PutMapping("/{id}/status")
+    @PreAuthorize("hasAuthority('" + Permissions.VISIT_EDIT + "')")
     public ResponseEntity<VisitResponseDto> updateVisitStatus(@PathVariable UUID id,
                                                               @RequestParam String status) {
         UUID tenantId = UUID.fromString(TenantContext.getTenantId());
@@ -51,6 +56,7 @@ public class VisitController {
     }
 
     @GetMapping
+    @PreAuthorize("hasAuthority('" + Permissions.VISIT_VIEW + "')")
     public ResponseEntity<List<VisitResponseDto>> listVisits(@RequestParam(required = false) UUID patientId) {
         UUID tenantId = UUID.fromString(TenantContext.getTenantId());
         return ResponseEntity.ok(visitService.listVisits(tenantId, patientId));

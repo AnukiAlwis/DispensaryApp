@@ -3,7 +3,6 @@ package com.anucode.dispensary.services;
 import com.anucode.dispensary.entities.User;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.security.Keys;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -12,6 +11,7 @@ import java.security.interfaces.RSAPublicKey;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -24,14 +24,14 @@ public class JwtTokenService {
     private static final long ACCESS_TOKEN_EXPIRY_MINUTES = 10;
     private static final long REFRESH_TOKEN_EXPIRY_DAYS = 30;
 
-    public String generateAccessToken(User user, UUID tenantId) {
+    public String generateAccessToken(User user, UUID tenantId, List<String> permissions) {
         Instant now = Instant.now();
         Instant expiry = now.plus(ACCESS_TOKEN_EXPIRY_MINUTES, ChronoUnit.MINUTES);
 
         return Jwts.builder()
                 .subject(user.getId().toString())
                 .claim("tenantId", tenantId.toString())
-                .claim("role", user.getRole().name())
+                .claim("permissions", permissions)
                 .issuedAt(Date.from(now))
                 .expiration(Date.from(expiry))
                 .signWith(privateKey, Jwts.SIG.RS256)
@@ -68,8 +68,9 @@ public class JwtTokenService {
         return UUID.fromString(claims.get("tenantId", String.class));
     }
 
-    public String extractRole(String token) {
+    @SuppressWarnings("unchecked")
+    public List<String> extractPermissions(String token) {
         Claims claims = extractClaims(token);
-        return claims.get("role", String.class);
+        return claims.get("permissions", List.class);
     }
 }

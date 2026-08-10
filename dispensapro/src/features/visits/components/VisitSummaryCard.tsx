@@ -11,6 +11,7 @@ interface VisitSummaryCardProps {
   queueNumber?: number;
   onOpenVisit?: () => void;
   onCheckIn?: () => void;
+  canCheckIn?: boolean;
 }
 
 export default function VisitSummaryCard({
@@ -20,6 +21,7 @@ export default function VisitSummaryCard({
   queueNumber,
   onOpenVisit,
   onCheckIn,
+  canCheckIn = true,
 }: VisitSummaryCardProps) {
   const isCheckedIn = status !== "BOOKED";
 
@@ -72,7 +74,7 @@ export default function VisitSummaryCard({
         flexWrap="wrap"
       >
         {queueNumber !== undefined && <QueueBadge queueNumber={queueNumber} size="small" />}
-        {onCheckIn && !isCheckedIn && (
+        {canCheckIn && onCheckIn && !isCheckedIn && (
           <Button variant="outlined" size="small" startIcon={<FrontHandIcon />} onClick={onCheckIn}>
             Check-In Now
           </Button>
