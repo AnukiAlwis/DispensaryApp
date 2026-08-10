@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import {
@@ -9,6 +9,11 @@ import {
   Typography,
   Stack,
   InputAdornment,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Alert,
 } from "@mui/material";
 import { MedicineFormValues } from "../types";
 
@@ -33,7 +38,7 @@ const validationSchema = Yup.object({
   unitOfMeasurement: Yup.string().required("Unit of Measurement is required"),
   sellPrice: Yup.number()
     .typeError("Sell price must be a number")
-    .min(0, "Sell price cannot be negative")
+    .positive("Sell price must be greater than 0")
     .max(10000, "Sell price cannot exceed 10,000")
     .required("Sell price is required"),
   quantity: Yup.number()
@@ -50,6 +55,9 @@ const MedicineForm: React.FC<MedicineFormProps> = ({
   initialValues,
   onSubmit,
 }) => {
+  const [showZeroQtyAlert, setShowZeroQtyAlert] = useState(false);
+  const [pendingValues, setPendingValues] = useState<MedicineFormValues | null>(null);
+
   const formik = useFormik<MedicineFormValues>({
     initialValues: initialValues || {
       name: "",
@@ -61,10 +69,31 @@ const MedicineForm: React.FC<MedicineFormProps> = ({
       reorderLevel: 50,
     },
     validationSchema,
-    onSubmit: (values) => onSubmit(values),
+    onSubmit: (values) => {
+      if (values.quantity === 0) {
+        setPendingValues(values);
+        setShowZeroQtyAlert(true);
+      } else {
+        onSubmit(values);
+      }
+    },
     validateOnChange: true,
     validateOnBlur: true,
   });
+
+  const handleConfirmZeroQty = () => {
+    if (pendingValues) {
+      onSubmit(pendingValues);
+      setShowZeroQtyAlert(false);
+      setPendingValues(null);
+    }
+  };
+
+  const handleCancelZeroQty = () => {
+    setShowZeroQtyAlert(false);
+    setPendingValues(null);
+    formik.setSubmitting(false);
+  };
 
   return (
     <Box>
@@ -186,6 +215,30 @@ const MedicineForm: React.FC<MedicineFormProps> = ({
           </Box>
         </Stack>
       </form>
+
+      <Dialog open={showZeroQtyAlert} onClose={handleCancelZeroQty}>
+        <DialogTitle>
+          <Alert severity="warning" sx={{ mb: 1 }}>
+            quantity(qty) field did not get updated.
+          </Alert>
+        </DialogTitle>
+        <DialogContent>
+          <Typography variant="body2" sx={{ mb: 2 }}>
+            are you sure
+          </Typography>
+          <Typography variant="h5" fontWeight="bold">
+            {pendingValues?.name || "Medicine"} {pendingValues?.strength || ""}{pendingValues?.unitOfMeasurement || ""} quantity in the stock is 0 ?
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCancelZeroQty} color="primary">
+            Cancel
+          </Button>
+          <Button onClick={handleConfirmZeroQty} variant="contained" color="primary">
+            Confirm
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };

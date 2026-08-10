@@ -84,12 +84,15 @@ export default function IdleQueueCard({
   return (
     <Card sx={{ mb: 3 }}>
       <CardContent sx={{ textAlign: "center", py: 4 }}>
+        <Typography variant="body1" color="text.secondary" gutterBottom>
+          Queue Number : 
+        </Typography>
         <Badge
           badgeContent={nextWaitingQueue.queueNumber}
           color="primary"
-          sx={{ mb: 2, fontSize: "1.5rem" }}
+          sx={{ mb: 2, fontSize: "10rem" }}
         />
-        <Typography variant="h5" gutterBottom>
+        <Typography variant="h5" sx={{ mt:3}} gutterBottom>
           {nextWaitingQueue.patientName}
         </Typography>
         <Typography color="text.secondary" sx={{ mb: 3 }}>

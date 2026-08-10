@@ -19,7 +19,7 @@ public class MedicineRequestDto {
     private String unitOfMeasurement;
 
     @NotNull
-    @DecimalMin("0.0")
+    @DecimalMin(value = "0.01", message = "Sell price must be greater than 0")
     private BigDecimal sellPrice;
 
     @Min(0)

@@ -33,7 +33,7 @@ export default function MedicineAutocomplete({
   }, []);
 
   const getOptionLabel = (option: Medicine) =>
-    `${option.name} ${option.strength || ""}`.trim();
+    `${option.name} ${option.strength || ""} (${option.unitOfMeasurement || ""})`.trim();
 
   return (
     <Autocomplete
