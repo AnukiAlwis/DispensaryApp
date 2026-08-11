@@ -47,15 +47,27 @@ export const parseFrequency = (freq: string): number => {
 };
 
 /**
- * Calculates the total quantity to dispense given dosage text (e.g. "2 tablets"),
+ * Extracts the numeric dose amount from dosage text (e.g. "1.5 tablets" -> 1.5).
+ * Supports up to 2 decimal places; defaults to 1 if no number is present.
+ */
+export const parseDosageUnits = (dosage: string): number => {
+  const match = dosage.match(/\d+(\.\d{1,2})?/);
+  const parsed = match ? parseFloat(match[0]) : NaN;
+  return !Number.isNaN(parsed) && parsed > 0 ? parsed : 1;
+};
+
+/**
+ * Calculates the total quantity to dispense given dosage text (e.g. "1.5 tablets"),
  * a frequency description, and the duration in days.
+ *
+ * The result is rounded up (ceiling) since partial pills cannot be dispensed.
  */
 export const calculateQuantity = (
   dosage: string,
   frequency: string,
   duration: number
 ): number => {
-  const units = parseInt(dosage.match(/\d+/)?.[0] || "1", 10);
+  const units = parseDosageUnits(dosage);
   const timesPerDay = parseFrequency(frequency);
-  return units * timesPerDay * duration;
+  return Math.ceil(units * timesPerDay * duration);
 };

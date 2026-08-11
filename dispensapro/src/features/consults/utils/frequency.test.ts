@@ -1,4 +1,4 @@
-import { parseFrequency, calculateQuantity } from "./frequency";
+import { parseFrequency, calculateQuantity, parseDosageUnits } from "./frequency";
 
 describe("parseFrequency", () => {
   test.each([
@@ -61,5 +61,41 @@ describe("calculateQuantity", () => {
 
   test("defaults dosage units to 1 when no number present", () => {
     expect(calculateQuantity("as directed", "Twice daily", 1)).toBe(2);
+  });
+});
+
+describe("parseDosageUnits", () => {
+  test.each([
+    ["2 tablets", 2],
+    ["1.5 tablets", 1.5],
+    ["0.5 tablet", 0.5],
+    ["0.25 tablet", 0.25],
+    ["as directed", 1],
+  ])("parses \"%s\" as %d units", (dosage, expected) => {
+    expect(parseDosageUnits(dosage)).toBe(expected);
+  });
+});
+
+describe("calculateQuantity - decimal dosage and rounding", () => {
+  test("regression: decimal dosage like '1.5 tablets' was previously truncated to 1", () => {
+    // 1.5 tablets, Twice daily (2x/day), 1 day => 3 exactly (no rounding needed)
+    expect(calculateQuantity("1.5 tablets", "Twice daily", 1)).toBe(3);
+  });
+
+  test("regression: '0.5 tablet' previously truncated to 1 unit instead of 0.5", () => {
+    // 0.5 tablet, Twice daily, 1 day => raw 1.0, still 1
+    expect(calculateQuantity("0.5 tablet", "Twice daily", 1)).toBe(1);
+  });
+
+  test("rounds up fractional total quantity since partial pills cannot be dispensed", () => {
+    // 0.5 tablet, After meals (3x/day), 1 day => raw 1.5 -> ceil to 2
+    expect(calculateQuantity("0.5 tablet", "After meals", 1)).toBe(2);
+  });
+
+  test("rounds up for multi-day fractional totals", () => {
+    // 1.5 tablets, Twice daily, 3 days => raw 9 -> exact, no rounding needed
+    expect(calculateQuantity("1.5 tablets", "Twice daily", 3)).toBe(9);
+    // 0.25 tablet, Twice daily, 3 days => raw 1.5 -> ceil to 2
+    expect(calculateQuantity("0.25 tablet", "Twice daily", 3)).toBe(2);
   });
 });

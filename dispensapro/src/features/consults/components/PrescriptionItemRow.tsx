@@ -58,6 +58,12 @@ export default function PrescriptionItemRow({
     }
   }, [medicine.id]);
 
+  const handleDosageChange = (value: string) => {
+    // Reject input if any number in the dosage has more than 2 decimal places
+    if (/\d+\.\d{3,}/.test(value)) return;
+    setDosage(value);
+  };
+
   const handleConfirm = () => {
     if (!dosage || !frequency || quantity <= 0 || !medicine.id) return;
     onConfirm({
@@ -97,7 +103,7 @@ export default function PrescriptionItemRow({
             fullWidth
             label="Dosage"
             value={dosage}
-            onChange={(e) => setDosage(e.target.value)}
+            onChange={(e) => handleDosageChange(e.target.value)}
             placeholder="e.g. 2 tablets"
             disabled={disabled || isCommitted}
           />
