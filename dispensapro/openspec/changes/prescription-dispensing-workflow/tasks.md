@@ -133,3 +133,34 @@
 - [ ] 4.3.3 End-to-end test: verify billing line items after dispense reflect actually-dispensed quantities (not just prescribed quantities) by dispensing with a scenario where they'd otherwise differ
 - [ ] 4.3.4 End-to-end test: attempt to dispense when one medicine has insufficient stock — verify the DISPENSE call fails, no `Dispense` rows are created, no `Medicine.quantity` changes for *any* medicine in the request (including the ones that had sufficient stock), and the modal displays the shortfall for the specific medicine(s)
 - [ ] 4.3.5 Regression test: confirm existing `/bills` and `/prescriptions/{id}/status` endpoints and their existing callers/tests are unaffected
+
+---
+
+## 5. Addendum: Backend-Driven Recovery for Dropped Tabs
+
+> No changes to existing tasks above. This addendum captures the minimal additional work needed so pharmacists can see and resume billing-pending flows after closing the tab.
+
+### 5.1 Backend
+
+- [x] 5.1.1 Add `findBillingPendingByTenantId` JPQL query to `PrescriptionRepository` joining `Prescription` and `Bill` where `p.status = 'DISPENSED'` and `b.status = 'DUE'`, ordered by `p.updatedAt ASC`
+- [x] 5.1.2 Add `getBillingPending(UUID tenantId)` to `PrescriptionService` and implement in `PrescriptionServiceImpl` reusing the `CurrentServingPrescriptionDto` mapping from `getUpNext`
+- [x] 5.1.3 Add `GET /prescriptions/billing-pending` to `PrescriptionController` (reuse `CurrentServingPrescriptionDto`, same permissions as current-serving/up-next)
+
+### 5.2 Frontend
+
+- [x] 5.2.1 Add `BillingPendingPrescription` type (same shape as `CurrentServingPrescription`) and `getBillingPending()` method to `dispensingService.ts` calling `GET /prescriptions/billing-pending`
+- [x] 5.2.2 On `PrescriptionDispensingPage`, fetch billing-pending list on mount alongside current-serving and up-next
+- [x] 5.2.3 Render a new "Billing Pending" card/table **above** "Currently Serving" when records exist (light yellow background, orange "Complete Billing" button) with columns: Patient Name, Phone, Doctor, Dispensed Date & Time, Action
+- [x] 5.2.4 "Complete Billing" button sets the selected prescription ID and opens `BillingModal` directly (`workflowState = "billing"`)
+- [x] 5.2.5 After DONE / payment complete, refetch the billing-pending list so the row disappears
+
+### 5.3 Database
+
+- [ ] No schema changes required; uses existing `prescription.status`, `bill.status`, and `bill.prescription_id`
+
+### 5.4 Testing
+
+- [ ] 5.4.1 Test `GET /prescriptions/billing-pending` returns only prescriptions with `status = DISPENSED` and `Bill.status = DUE` for the current tenant
+- [ ] 5.4.2 End-to-end test: dispense a prescription, close the tab on the Billing modal, reopen the page, and verify the prescription appears in "Billing Pending"
+- [ ] 5.4.3 End-to-end test: click "Complete Billing" and verify `BillingModal` opens with the correct bill
+- [ ] 5.4.4 End-to-end test: complete payment and verify the row disappears from "Billing Pending"

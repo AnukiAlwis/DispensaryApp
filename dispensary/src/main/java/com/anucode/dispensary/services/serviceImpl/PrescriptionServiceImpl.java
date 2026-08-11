@@ -245,6 +245,25 @@ public class PrescriptionServiceImpl implements PrescriptionService {
     }
 
     @Override
+    public List<CurrentServingPrescriptionDto> getBillingPending(UUID tenantId) {
+        List<Prescription> prescriptions = prescriptionRepository.findBillingPendingByTenantId(tenantId);
+
+        return prescriptions.stream()
+                .map(prescription -> {
+                    CurrentServingPrescriptionDto dto = new CurrentServingPrescriptionDto();
+                    dto.setId(prescription.getId());
+                    Patient patient = prescription.getPatient();
+                    dto.setPatientName(patient != null ? (patient.getFirstName() + " " + patient.getLastName()) : null);
+                    dto.setPatientPhone(patient != null ? patient.getContact() : null);
+                    User doctor = prescription.getDoctor();
+                    dto.setDoctorName(doctor != null ? doctor.getFullName() : null);
+                    dto.setIssuedAt(prescription.getUpdatedAt());
+                    return dto;
+                })
+                .collect(Collectors.toList());
+    }
+
+    @Override
     public List<PrescriptionMedicineDto> getPrescriptionMedicines(UUID tenantId, UUID prescriptionId) {
         Prescription prescription = prescriptionRepository.findById(prescriptionId)
                 .orElseThrow(() -> new NotFoundException("Prescription not found"));

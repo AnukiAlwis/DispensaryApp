@@ -2,6 +2,7 @@ import apiClient from "../../../services/apiClient";
 import {
   CurrentServingPrescription,
   UpNextPrescription,
+  BillingPendingPrescription,
   DispensingMedicine,
   PrescriptionMedicineDto,
 } from "../types";
@@ -26,6 +27,13 @@ export const dispensingService = {
   getUpNext: async (): Promise<UpNextPrescription[]> => {
     const response = await apiClient.get<UpNextPrescription[]>(
       `${BASE_URL}/up-next`
+    );
+    return response.data;
+  },
+
+  getBillingPending: async (): Promise<BillingPendingPrescription[]> => {
+    const response = await apiClient.get<BillingPendingPrescription[]>(
+      `${BASE_URL}/billing-pending`
     );
     return response.data;
   },

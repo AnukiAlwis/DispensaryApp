@@ -21,6 +21,7 @@ import { billingService } from "../../consults/services/billingService";
 import {
   CurrentServingPrescription,
   UpNextPrescription,
+  BillingPendingPrescription,
 } from "../types";
 import { hasActiveSession, clearState } from "../utils/preparationStorage";
 import { useHasPermission } from "../../../hooks/usePermissions";
@@ -36,6 +37,9 @@ export default function PrescriptionDispensingPage() {
   const [currentServing, setCurrentServing] =
     useState<CurrentServingPrescription | null>(null);
   const [upNext, setUpNext] = useState<UpNextPrescription[]>([]);
+  const [billingPending, setBillingPending] = useState<
+    BillingPendingPrescription[]
+  >([]);
   const [workflowState, setWorkflowState] = useState<WorkflowState>("idle");
   const [selectedPrescriptionId, setSelectedPrescriptionId] = useState<
     string | null
@@ -49,12 +53,14 @@ export default function PrescriptionDispensingPage() {
 
   const fetchData = async () => {
     try {
-      const [serving, next] = await Promise.all([
+      const [serving, next, pending] = await Promise.all([
         dispensingService.getCurrentServing(),
         dispensingService.getUpNext(),
+        dispensingService.getBillingPending(),
       ]);
       setCurrentServing(serving);
       setUpNext(next);
+      setBillingPending(pending);
       setHasActiveSessionState(hasActiveSession());
     } catch (error) {
       console.error("Failed to fetch dispensing data:", error);
@@ -143,12 +149,65 @@ export default function PrescriptionDispensingPage() {
     setWorkflowState("billing");
   };
 
+  const handleCompleteBilling = (prescriptionId: string) => {
+    setSelectedPrescriptionId(prescriptionId);
+    setIsDispensed(true);
+    setWorkflowState("billing");
+  };
+
   return (
     <Box sx={{ p: 2 }}>
       <PageHeader
         title="Prescription Dispensing"
         subtitle="Manage medicine preparation and billing for prescriptions."
       />
+
+      {/* Billing Pending Card */}
+      {billingPending.length > 0 && (
+        <Card sx={{ mb: 3, backgroundColor: "#fff9c4" }}>
+          <CardContent>
+            <Typography variant="h5" gutterBottom sx={{ fontWeight: "bold" }}>
+              Billing Pending
+            </Typography>
+            <TableContainer component={Paper} sx={{ mt: 2 }}>
+              <Table>
+                <TableHead>
+                  <TableRow>
+                    <TableCell>Patient Name</TableCell>
+                    <TableCell>Phone Number</TableCell>
+                    <TableCell>Doctor</TableCell>
+                    <TableCell>Dispensed Date & Time</TableCell>
+                    <TableCell>Actions</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {billingPending.map((prescription) => (
+                    <TableRow key={prescription.id}>
+                      <TableCell>{prescription.patientName}</TableCell>
+                      <TableCell>{prescription.patientPhone}</TableCell>
+                      <TableCell>{prescription.doctorName}</TableCell>
+                      <TableCell>{formatDateTime(prescription.issuedAt)}</TableCell>
+                      <TableCell>
+                        <Button
+                          size="small"
+                          variant="contained"
+                          sx={{
+                            backgroundColor: "#ff9800",
+                            "&:hover": { backgroundColor: "#f57c00" },
+                          }}
+                          onClick={() => handleCompleteBilling(prescription.id)}
+                        >
+                          Complete Billing
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Currently Serving Card */}
       {currentServing ? (
@@ -265,6 +324,7 @@ export default function PrescriptionDispensingPage() {
                           >
                             View Prescription
                           </Button>
+                          {/*
                           <Button
                             size="small"
                             variant="contained"
@@ -273,6 +333,7 @@ export default function PrescriptionDispensingPage() {
                           >
                             Dispense Now
                           </Button>
+                          */}
                         </Box>
                       </TableCell>
                     </TableRow>
@@ -311,12 +372,22 @@ export default function PrescriptionDispensingPage() {
       )}
 
       {/* Billing Modal */}
-      {selectedPrescriptionId && currentServing && (
+      {selectedPrescriptionId && (
         <BillingModal
           open={workflowState === "billing"}
           prescriptionId={selectedPrescriptionId}
-          patientName={currentServing.patientName}
-          patientPhone={currentServing.patientPhone}
+          patientName={
+            currentServing?.id === selectedPrescriptionId
+              ? currentServing.patientName
+              : billingPending.find((p) => p.id === selectedPrescriptionId)
+                  ?.patientName || ""
+          }
+          patientPhone={
+            currentServing?.id === selectedPrescriptionId
+              ? currentServing.patientPhone
+              : billingPending.find((p) => p.id === selectedPrescriptionId)
+                  ?.patientPhone || ""
+          }
           onClose={() => {
             setWorkflowState("idle");
             setSelectedPrescriptionId(null);
