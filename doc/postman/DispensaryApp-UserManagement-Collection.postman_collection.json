@@ -1,0 +1,550 @@
+{
+  "info": {
+    "name": "DispensaryApp - User Management",
+    "description": "Auto-authenticating collection for user management. Run \"1. Login\" then \"2. Get Roles\" once. After that, every user request uses stored tokens and role IDs automatically.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080"
+    }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "1. Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"{{username}}\",\n  \"password\": \"{{password}}\",\n  \"tenantCode\": \"{{tenantCode}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "login"]
+            },
+            "description": "Login as the user configured in the environment (default: admin). Stores accessToken and refreshToken automatically."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "",
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response has tokens and user', function () {",
+                  "    pm.expect(jsonData).to.have.property('accessToken');",
+                  "    pm.expect(jsonData).to.have.property('refreshToken');",
+                  "    pm.expect(jsonData).to.have.property('user');",
+                  "});",
+                  "",
+                  "if (jsonData.accessToken) {",
+                  "    pm.environment.set('accessToken', jsonData.accessToken);",
+                  "}",
+                  "",
+                  "if (jsonData.refreshToken) {",
+                  "    pm.environment.set('refreshToken', jsonData.refreshToken);",
+                  "}",
+                  "",
+                  "if (jsonData.user) {",
+                  "    pm.environment.set('userId', jsonData.user.id);",
+                  "    pm.environment.set('userRoles', (jsonData.user.roles || []).join(','));",
+                  "}",
+                  "",
+                  "console.log('Login successful. Tokens stored.');"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Refresh Token",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/refresh",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "refresh"]
+            },
+            "description": "Rotate access and refresh tokens. Updates the environment variables automatically."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "",
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "if (jsonData.accessToken) {",
+                  "    pm.environment.set('accessToken', jsonData.accessToken);",
+                  "}",
+                  "",
+                  "if (jsonData.refreshToken) {",
+                  "    pm.environment.set('refreshToken', jsonData.refreshToken);",
+                  "}",
+                  "",
+                  "console.log('Tokens refreshed.');"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/logout",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "logout"]
+            },
+            "description": "Logout the current session and clear stored tokens."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 204', function () {",
+                  "    pm.response.to.have.status(204);",
+                  "});",
+                  "",
+                  "pm.environment.set('accessToken', '');",
+                  "pm.environment.set('refreshToken', '');",
+                  "pm.environment.set('userId', '');",
+                  "pm.environment.set('userRoles', '');",
+                  "",
+                  "console.log('Logged out. Tokens cleared.');"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Current User",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/me",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "me"]
+            },
+            "description": "Returns the currently authenticated user."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Setup",
+      "item": [
+        {
+          "name": "2. Get Roles",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/roles",
+              "host": ["{{baseUrl}}"],
+              "path": ["roles"]
+            },
+            "description": "Fetches all roles and stores each system role ID in the environment. Run this once after login so user-creation requests can reference role IDs without copy-pasting UUIDs."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "var roles = pm.response.json();",
+                  "var map = {};",
+                  "",
+                  "roles.forEach(function (role) {",
+                  "    map[role.name] = role.id;",
+                  "});",
+                  "",
+                  "function saveRoleId(name, varName) {",
+                  "    if (map[name]) {",
+                  "        pm.environment.set(varName, map[name]);",
+                  "        console.log('Stored ' + varName + ' = ' + map[name]);",
+                  "    }",
+                  "}",
+                  "",
+                  "saveRoleId('ADMIN', 'adminRoleId');",
+                  "saveRoleId('DOCTOR', 'doctorRoleId');",
+                  "saveRoleId('NURSE', 'nurseRoleId');",
+                  "saveRoleId('PHARMACIST', 'pharmacistRoleId');",
+                  "saveRoleId('RECEPTIONIST', 'receptionistRoleId');",
+                  "",
+                  "pm.test('System role IDs captured', function () {",
+                  "    pm.expect(pm.environment.get('adminRoleId')).to.not.be.undefined;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Users",
+      "item": [
+        {
+          "name": "Create Admin User",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"admin{{$timestamp}}\",\n  \"fullName\": \"Test Admin\",\n  \"email\": \"admin{{$timestamp}}@hma.lk\",\n  \"phone\": \"+94712345678\",\n  \"roles\": [{\n    \"id\": \"{{adminRoleId}}\",\n    \"name\": \"ADMIN\"\n  }],\n  \"displayPosition\": \"ADMIN\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/users",
+              "host": ["{{baseUrl}}"],
+              "path": ["users"]
+            },
+            "description": "Creates a new user with the ADMIN system role. Requires USER_MANAGE permission (admin account)."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 201', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.id) {",
+                  "    pm.environment.set('createdUserId', jsonData.id);",
+                  "    console.log('Created user ID: ' + jsonData.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create Doctor User",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"doctor{{$timestamp}}\",\n  \"fullName\": \"Test Doctor\",\n  \"email\": \"doctor{{$timestamp}}@hma.lk\",\n  \"phone\": \"+94712345678\",\n  \"roles\": [{\n    \"id\": \"{{doctorRoleId}}\",\n    \"name\": \"DOCTOR\"\n  }],\n  \"displayPosition\": \"DOCTOR\",\n  \"doctorCharge\": 1500\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/users",
+              "host": ["{{baseUrl}}"],
+              "path": ["users"]
+            },
+            "description": "Creates a new user with the DOCTOR system role. doctorCharge must be between 100 and 3000."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 201', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.id) {",
+                  "    pm.environment.set('createdUserId', jsonData.id);",
+                  "    console.log('Created user ID: ' + jsonData.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create Nurse User",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"nurse{{$timestamp}}\",\n  \"fullName\": \"Test Nurse\",\n  \"email\": \"nurse{{$timestamp}}@hma.lk\",\n  \"phone\": \"+94712345678\",\n  \"roles\": [{\n    \"id\": \"{{nurseRoleId}}\",\n    \"name\": \"NURSE\"\n  }],\n  \"displayPosition\": \"NURSE\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/users",
+              "host": ["{{baseUrl}}"],
+              "path": ["users"]
+            },
+            "description": "Creates a new user with the NURSE system role."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 201', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.id) {",
+                  "    pm.environment.set('createdUserId', jsonData.id);",
+                  "    console.log('Created user ID: ' + jsonData.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create Pharmacist User",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"pharmacist{{$timestamp}}\",\n  \"fullName\": \"Test Pharmacist\",\n  \"email\": \"pharmacist{{$timestamp}}@hma.lk\",\n  \"phone\": \"+94712345678\",\n  \"roles\": [{\n    \"id\": \"{{pharmacistRoleId}}\",\n    \"name\": \"PHARMACIST\"\n  }],\n  \"displayPosition\": \"PHARMACIST\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/users",
+              "host": ["{{baseUrl}}"],
+              "path": ["users"]
+            },
+            "description": "Creates a new user with the PHARMACIST system role."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 201', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.id) {",
+                  "    pm.environment.set('createdUserId', jsonData.id);",
+                  "    console.log('Created user ID: ' + jsonData.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create Receptionist User",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"receptionist{{$timestamp}}\",\n  \"fullName\": \"Test Receptionist\",\n  \"email\": \"receptionist{{$timestamp}}@hma.lk\",\n  \"phone\": \"+94712345678\",\n  \"roles\": [{\n    \"id\": \"{{receptionistRoleId}}\",\n    \"name\": \"RECEPTIONIST\"\n  }],\n  \"displayPosition\": \"RECEPTIONIST\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/users",
+              "host": ["{{baseUrl}}"],
+              "path": ["users"]
+            },
+            "description": "Creates a new user with the RECEPTIONIST system role."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 201', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.id) {",
+                  "    pm.environment.set('createdUserId', jsonData.id);",
+                  "    console.log('Created user ID: ' + jsonData.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "List Users",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users",
+              "host": ["{{baseUrl}}"],
+              "path": ["users"]
+            },
+            "description": "List all users for the current tenant."
+          },
+          "response": []
+        },
+        {
+          "name": "Get User by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users/{{createdUserId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", "{{createdUserId}}"]
+            },
+            "description": "Fetch the user whose ID was stored by the last Create User request."
+          },
+          "response": []
+        },
+        {
+          "name": "Update User",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fullName\": \"Updated Name\",\n  \"email\": \"updated{{$timestamp}}@hma.lk\",\n  \"phone\": \"+94787654321\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/users/{{createdUserId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", "{{createdUserId}}"]
+            },
+            "description": "Update the user whose ID was stored by the last Create User request. Only sends fields that change."
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}
