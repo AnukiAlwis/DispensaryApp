@@ -42,6 +42,9 @@ public class Dispense {
     @JoinColumn(name = "dispensed_by")
     private User dispensedBy;
 
+    @Column(name = "note")
+    private String note;
+
     @PrePersist
     public void prePersist() {
         if (id == null) id = UUID.randomUUID();

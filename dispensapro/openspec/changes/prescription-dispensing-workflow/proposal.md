@@ -31,3 +31,29 @@ The current dispensing workflow lacks structure and guidance, leading to potenti
 - **Database**: Updates to `Medicine.quantity` and creation of `Dispense` rows via the existing entity/table; no schema migration required (Hibernate `ddl-auto`)
 - **User Experience**: Structured pharmacist workflow with enforced single-patient processing
 - **Dependencies**: React, sessionStorage for preparation-state persistence, existing `Prescription`/`PrescriptionItem`/`Medicine`/`Dispense`/`Bill` APIs
+
+---
+
+## Addendum: Dispense Stock Integrity Fix (Post-Implementation Gap)
+
+### Why
+
+Post-implementation review found that task 1.5 ("use existing `PUT /prescriptions/{id}/status` ... no new backend endpoint needed for complete-dispense") diverged from this document's own decision (see Decisions → API Design: "Looping the existing per-item `POST /dispense` endpoint from the frontend: Rejected"). The frontend's `MedicinePreparationModal.handleDispense` only calls `PUT /prescriptions/{id}/status` and **never** calls `POST /dispense` or any endpoint that creates `Dispense` rows. Consequences, confirmed against the current codebase:
+
+1. **No stock deduction ever happens.** `Medicine.quantity` is never decremented — inventory becomes permanently inaccurate on every dispensing transaction (highest-impact gap, affects 100% of dispenses).
+2. **No `Dispense` audit trail.** No record of who dispensed what, when, or how much. `BillServiceImpl.createOrRefreshLineItemsFromDispense` therefore always falls back to *prescribed* quantities (never *actually dispensed* quantities), so bill line items can silently diverge from what was really handed to the patient.
+3. **No real stock validation blocking dispense.** The preparation table's red stock warning is cosmetic; the DISPENSE button is gated only by UI status-cycling (`allReady`), not by an actual backend stock check. A pharmacist can dispense a fully out-of-stock medicine.
+
+### What Changes
+
+- **Remove the existing single-item `/dispense` API entirely** — `DispenseController`, `DispenseService`/`DispenseServiceImpl`, and `DispenseRequestDto`/`DispenseResponseDto` are dead code from this workflow's perspective and will be deleted. The new batch endpoint replaces it completely.
+- **New backend endpoint** `POST /prescriptions/{id}/complete-dispense`: single `@Transactional` operation that validates stock for **all** prescription items first (aggregating every shortfall, not just the first), then creates one `Dispense` row per item, decrements `Medicine.quantity` for each, and transitions `Prescription.status` to `DISPENSED` — all or nothing. Validation rules are copied from the removed `DispenseServiceImpl.recordDispense` (tenant checks, `ISSUED` status check, medicine active check, stock check).
+- **Add the dead `note` field to `Dispense`**: the old `DispenseRequestDto.note` was accepted but never persisted (no column). Added as a nullable `String` column on `Dispense` to complete the audit trail.
+- **Frontend integration**: `MedicinePreparationModal.handleDispense` calls the new endpoint instead of the bare `PUT /prescriptions/{id}/status` call. On `InsufficientStockException` (400), the modal surfaces the exact shortfall per medicine instead of silently succeeding.
+- **Bill accuracy restored**: because real `Dispense` rows now exist before `billingService.calculate()` runs, `BillServiceImpl.createOrRefreshLineItemsFromDispense` uses actually-dispensed quantities, closing the prescribed-vs-dispensed discrepancy.
+
+### Impact
+
+- **Backend**: delete `DispenseController`, `DispenseService`/`DispenseServiceImpl`, `DispenseRequestDto`, `DispenseResponseDto`; add new DTOs (`CompleteDispenseRequestDto`, `CompleteDispenseItemDto`) with no redundant `medicineId` field (derived from `PrescriptionItem`); add `PrescriptionService.completeDispense` method; add `Dispense.note` column (nullable, Hibernate-managed).
+- **Frontend**: `dispensingService` gains `completeDispense(prescriptionId, items)`; `MedicinePreparationModal` error handling updated to parse and display per-medicine shortfall messages.
+- **Risk**: Low — the old `/dispense` endpoint has no callers in the current codebase (verified), so deletion is safe. The new endpoint is additive with respect to the rest of the system. The `PUT /prescriptions/{id}/status → DISPENSED` transition remains available but is no longer used by this workflow's dispense action (still valid for other callers/tests).

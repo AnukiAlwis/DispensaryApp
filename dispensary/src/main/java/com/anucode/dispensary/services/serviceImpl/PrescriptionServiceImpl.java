@@ -3,6 +3,7 @@ package com.anucode.dispensary.services.serviceImpl;
 import com.anucode.dispensary.dtos.*;
 import com.anucode.dispensary.entities.*;
 import com.anucode.dispensary.exception.*;
+import com.anucode.dispensary.repos.DispenseRepository;
 import com.anucode.dispensary.repos.*;
 import com.anucode.dispensary.services.PrescriptionService;
 import org.modelmapper.ModelMapper;
@@ -25,6 +26,7 @@ public class PrescriptionServiceImpl implements PrescriptionService {
     private final TenantRepository tenantRepository;
     private final PatientRepository patientRepository;
     private final MedicineRepository medicineRepository;
+    private final DispenseRepository dispenseRepository;
     private final ModelMapper modelMapper;
 
     public PrescriptionServiceImpl(PrescriptionRepository prescriptionRepository,
@@ -34,6 +36,7 @@ public class PrescriptionServiceImpl implements PrescriptionService {
                                    TenantRepository tenantRepository,
                                    PatientRepository patientRepository,
                                    MedicineRepository medicineRepository,
+                                   DispenseRepository dispenseRepository,
                                    ModelMapper modelMapper) {
         this.prescriptionRepository = prescriptionRepository;
         this.prescriptionItemRepository = prescriptionItemRepository;
@@ -42,6 +45,7 @@ public class PrescriptionServiceImpl implements PrescriptionService {
         this.tenantRepository = tenantRepository;
         this.patientRepository = patientRepository;
         this.medicineRepository = medicineRepository;
+        this.dispenseRepository = dispenseRepository;
         this.modelMapper = modelMapper;
     }
 
@@ -294,6 +298,103 @@ public class PrescriptionServiceImpl implements PrescriptionService {
             }
         }
         return 0;
+    }
+
+    @Override
+    public PrescriptionResponseDto completeDispense(UUID tenantId, UUID currentUserId, UUID prescriptionId, CompleteDispenseRequestDto request) {
+        // Load and validate prescription
+        Prescription prescription = prescriptionRepository.findById(prescriptionId)
+                .orElseThrow(() -> new NotFoundException("Prescription not found"));
+
+        if (!prescription.getTenant().getId().equals(tenantId)) {
+            throw new TenantMismatchException("Tenant mismatch");
+        }
+
+        if (prescription.getStatus() != Prescription.Status.ISSUED) {
+            throw new InvalidPrescriptionStateException("Prescription must be in ISSUED status to dispense");
+        }
+
+        // Load all prescription items for this prescription
+        List<PrescriptionItem> prescriptionItems = prescriptionItemRepository.findByPrescriptionId(prescriptionId);
+
+        // Validate that all request items belong to this prescription
+        for (CompleteDispenseItemDto itemDto : request.getItems()) {
+            boolean belongsToPrescription = prescriptionItems.stream()
+                    .anyMatch(pi -> pi.getId().equals(itemDto.getPrescriptionItemId()));
+            if (!belongsToPrescription) {
+                throw new NotFoundException("Prescription item " + itemDto.getPrescriptionItemId() + " does not belong to this prescription");
+            }
+        }
+
+        // Validation pass: collect all stock shortfalls
+        java.util.List<String> shortfalls = new java.util.ArrayList<>();
+
+        for (CompleteDispenseItemDto itemDto : request.getItems()) {
+            PrescriptionItem item = prescriptionItems.stream()
+                    .filter(pi -> pi.getId().equals(itemDto.getPrescriptionItemId()))
+                    .findFirst()
+                    .orElseThrow(() -> new NotFoundException("Prescription item not found"));
+
+            Medicine medicine = item.getMedicine();
+            if (medicine == null) {
+                throw new NotFoundException("Medicine not found for prescription item");
+            }
+
+            if (!medicine.getTenant().getId().equals(tenantId)) {
+                throw new TenantMismatchException("Medicine tenant mismatch");
+            }
+
+            if (!medicine.getIsActive()) {
+                throw new InvalidRequestException("Medicine is not active: " + medicine.getName());
+            }
+
+            if (medicine.getQuantity() < itemDto.getQtyDispensed()) {
+                shortfalls.add(String.format("%s (required %d, available %d)",
+                        medicine.getName(),
+                        itemDto.getQtyDispensed(),
+                        medicine.getQuantity()));
+            }
+        }
+
+        // If any shortfalls, throw aggregated exception
+        if (!shortfalls.isEmpty()) {
+            throw new InsufficientStockException("Insufficient stock for: " + String.join("; ", shortfalls));
+        }
+
+        // Write pass: create dispense rows and decrement stock
+        User currentUser = userRepository.findById(currentUserId)
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
+
+        for (CompleteDispenseItemDto itemDto : request.getItems()) {
+            PrescriptionItem item = prescriptionItems.stream()
+                    .filter(pi -> pi.getId().equals(itemDto.getPrescriptionItemId()))
+                    .findFirst()
+                    .orElseThrow(() -> new NotFoundException("Prescription item not found"));
+
+            Medicine medicine = item.getMedicine();
+
+            // Create dispense row
+            Dispense dispense = Dispense.builder()
+                    .tenant(prescription.getTenant())
+                    .prescriptionItem(item)
+                    .medicine(medicine)
+                    .qtyDispensed(itemDto.getQtyDispensed())
+                    .note(itemDto.getNote())
+                    .dispensedBy(currentUser)
+                    .build();
+
+            dispenseRepository.save(dispense);
+
+            // Decrement medicine quantity
+            medicine.setQuantity(medicine.getQuantity() - itemDto.getQtyDispensed());
+            medicineRepository.save(medicine);
+        }
+
+        // Transition prescription status to DISPENSED
+        prescription.setStatus(Prescription.Status.DISPENSED);
+        prescriptionRepository.save(prescription);
+
+        return modelMapper.map(prescription, PrescriptionResponseDto.class);
     }
 }
 

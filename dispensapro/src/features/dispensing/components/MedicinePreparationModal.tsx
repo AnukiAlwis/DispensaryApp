@@ -135,9 +135,16 @@ export default function MedicinePreparationModal({
     setError(null);
 
     try {
-      // Update prescription status to DISPENSED
-      await dispensingService.updatePrescriptionStatus(prescriptionId, "DISPENSED");
-      
+      // Call complete-dispense endpoint with all medicines
+      await dispensingService.completeDispense(
+        prescriptionId,
+        medicines.map(m => ({
+          prescriptionItemId: m.id,
+          qtyDispensed: m.quantity,
+          note: undefined
+        }))
+      );
+
       // Clear sessionStorage
       clearState();
 
@@ -145,8 +152,9 @@ export default function MedicinePreparationModal({
       // For now, we'll use a placeholder - the parent component will handle this
       onDispenseComplete("");
     } catch (err: any) {
-      if (err.response?.data?.message?.includes("Insufficient stock")) {
-        setError(err.response.data.message);
+      // Parse error from GlobalExceptionHandler format: { error: string }
+      if (err.response?.status === 400 && err.response?.data?.error) {
+        setError(err.response.data.error);
       } else {
         setError("Failed to complete dispense. Please try again.");
       }

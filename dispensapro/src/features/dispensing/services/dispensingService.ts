@@ -48,4 +48,11 @@ export const dispensingService = {
   ): Promise<void> => {
     await apiClient.put(`${BASE_URL}/${prescriptionId}/status`, { status });
   },
+
+  completeDispense: async (
+    prescriptionId: string,
+    items: { prescriptionItemId: string; qtyDispensed: number; note?: string }[]
+  ): Promise<void> => {
+    await apiClient.post(`${BASE_URL}/${prescriptionId}/complete-dispense`, { items });
+  },
 };

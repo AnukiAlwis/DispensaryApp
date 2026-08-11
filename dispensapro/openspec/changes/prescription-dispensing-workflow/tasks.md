@@ -103,3 +103,33 @@
 - [ ] 3.12 Perform manual testing with realistic prescription data
 - [ ] 3.13 Fix any identified bugs or UI inconsistencies
 - [ ] 3.14 Final code review and cleanup
+
+---
+
+## 4. Addendum: Dispense Stock Integrity Fix
+
+> **Root cause**: Task 1.5 above was implemented as "reuse `PUT /prescriptions/{id}/status`, no new endpoint needed" — this was incorrect and contradicts this same document's original design decision. The frontend never calls `POST /dispense`, so `Medicine.quantity` is never decremented, no `Dispense` audit rows are ever created, and stock is never actually validated before dispensing. See `design.md` → "Addendum: Dispense Stock Integrity Fix" for full design.
+
+### 4.1 Backend
+
+- [x] 4.1.0 Add `note` column to `Dispense` entity (`entities/Dispense.java`, nullable `String`)
+- [x] 4.1.1 Delete the old `/dispense` endpoint (verified to have no callers): delete `DispenseController`, `DispenseService` interface, `DispenseServiceImpl`, `DispenseRequestDto`, `DispenseResponseDto`
+- [x] 4.1.2 Add `CompleteDispenseItemDto { UUID prescriptionItemId; Integer qtyDispensed; String note }` and `CompleteDispenseRequestDto { List<CompleteDispenseItemDto> items }` in `dispensary/.../dtos/` — **no `medicineId` field**; `Medicine` is derived from `PrescriptionItem.getMedicine()`
+- [x] 4.1.3 Add `PrescriptionService.completeDispense(UUID tenantId, UUID currentUserId, UUID prescriptionId, CompleteDispenseRequestDto request): PrescriptionResponseDto` to the `PrescriptionService` interface; implement in `PrescriptionServiceImpl` as a single `@Transactional` method that: (a) loads & validates the prescription (tenant match, `status == ISSUED`), (b) loads prescription items and matches them against request items, (c) **validation pass**: for each item, resolve `Medicine` via `prescriptionItem.getMedicine()`, check `medicine.isActive`, `medicine.quantity >= qtyDispensed`, `medicine.tenant == tenant`; collect all shortfalls; if any exist, throw one aggregated `InsufficientStockException` with no writes, (d) **write pass**: for each item, create `Dispense` row (with `note`, `dispensedAt=now`, `dispensedBy=currentUser`), decrement `Medicine.quantity`, save both, (e) transitions `prescription.status = DISPENSED`, (f) returns `PrescriptionResponseDto`
+- [x] 4.1.4 Add `POST /prescriptions/{id}/complete-dispense` in `PrescriptionController`, guarded by `@PreAuthorize("hasAuthority('" + Permissions.PRESCRIPTION_DISPENSE + "')")`, delegating to `completeDispense`
+- [ ] 4.1.5 Unit test: (a) `completeDispense` happy path creates N `Dispense` rows (with `note`) + decrements N medicines + sets `DISPENSED`, (b) insufficient stock on one of several items rolls back everything (no `Dispense` rows, no quantity changes) and reports all shortfalls, (c) rejects when prescription is not `ISSUED`, (d) rejects cross-tenant prescription/medicine access, (e) confirms medicine-active check applies
+
+### 4.2 Frontend
+
+- [x] 4.2.1 Add `completeDispense` method to `dispensingService.ts`, calling `POST /prescriptions/{id}/complete-dispense`
+- [x] 4.2.2 Update `MedicinePreparationModal.handleDispense` to call `dispensingService.completeDispense(prescriptionId, medicines.map(m => ({ prescriptionItemId: m.id, qtyDispensed: m.quantity })))` instead of `dispensingService.updatePrescriptionStatus(prescriptionId, "DISPENSED")`
+- [x] 4.2.3 Parse `400` error response body (`{ error: string }` per `GlobalExceptionHandler.handleInsufficientStock`) in the `catch` block and display the full aggregated shortfall message via the existing `<Alert severity="error">`, keeping the modal open (do not clear sessionStorage / do not transition to billing) so the pharmacist can retry after restocking or adjusting
+- [x] 4.2.4 Remove/replace the now-obsolete direct call to `dispensingService.updatePrescriptionStatus` for the DISPENSE action (the status transition is now handled server-side inside `complete-dispense`); leave `updatePrescriptionStatus` itself in place since it may still be used elsewhere (e.g. cancellation)
+
+### 4.3 Integration & Testing
+
+- [ ] 4.3.1 End-to-end test: dispense a prescription, verify `Medicine.quantity` decreases by the dispensed amount for each medicine
+- [ ] 4.3.2 End-to-end test: verify a `Dispense` row is created per prescription item with correct `dispensedBy` (current pharmacist) and `dispensedAt`
+- [ ] 4.3.3 End-to-end test: verify billing line items after dispense reflect actually-dispensed quantities (not just prescribed quantities) by dispensing with a scenario where they'd otherwise differ
+- [ ] 4.3.4 End-to-end test: attempt to dispense when one medicine has insufficient stock — verify the DISPENSE call fails, no `Dispense` rows are created, no `Medicine.quantity` changes for *any* medicine in the request (including the ones that had sufficient stock), and the modal displays the shortfall for the specific medicine(s)
+- [ ] 4.3.5 Regression test: confirm existing `/bills` and `/prescriptions/{id}/status` endpoints and their existing callers/tests are unaffected

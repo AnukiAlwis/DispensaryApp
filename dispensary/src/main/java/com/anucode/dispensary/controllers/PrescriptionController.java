@@ -1,6 +1,7 @@
 package com.anucode.dispensary.controllers;
 
 import com.anucode.dispensary.config.TenantContext;
+import com.anucode.dispensary.dtos.CompleteDispenseRequestDto;
 import com.anucode.dispensary.dtos.CurrentServingPrescriptionDto;
 import com.anucode.dispensary.dtos.PrescriptionMedicineDto;
 import com.anucode.dispensary.dtos.PrescriptionRequestDto;
@@ -96,6 +97,15 @@ public class PrescriptionController {
     public ResponseEntity<List<PrescriptionMedicineDto>> getPrescriptionMedicines(@PathVariable UUID id) {
         UUID tenantId = UUID.fromString(TenantContext.getTenantId());
         return ResponseEntity.ok(prescriptionService.getPrescriptionMedicines(tenantId, id));
+    }
+
+    @PostMapping("/{id}/complete-dispense")
+    @PreAuthorize("hasAuthority('" + Permissions.PRESCRIPTION_DISPENSE + "')")
+    public ResponseEntity<PrescriptionResponseDto> completeDispense(@PathVariable UUID id,
+                                                                       @Valid @RequestBody CompleteDispenseRequestDto request) {
+        UUID tenantId = UUID.fromString(TenantContext.getTenantId());
+        UUID currentUserId = TenantContext.getCurrentUser();
+        return ResponseEntity.ok(prescriptionService.completeDispense(tenantId, currentUserId, id, request));
     }
 }
 
