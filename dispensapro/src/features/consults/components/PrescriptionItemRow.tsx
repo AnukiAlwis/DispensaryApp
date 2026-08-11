@@ -9,6 +9,7 @@ import {
 } from "@mui/material";
 import CheckIcon from "@mui/icons-material/Check";
 import { Medicine } from "../../pharmacy/types";
+import { calculateQuantity } from "../utils/frequency";
 
 const FREQUENCY_OPTIONS = [
   "After meals",
@@ -31,13 +32,6 @@ interface PrescriptionItemRowProps {
   }) => void;
 }
 
-const parseFrequency = (freq: string): number => {
-  const lower = freq.toLowerCase();
-  if (lower.includes("after meals") || lower.includes("before meals")) return 3;
-  if (lower.includes("twice daily") || lower.includes("2 times")) return 2;
-  return 1;
-};
-
 export default function PrescriptionItemRow({
   medicine,
   disabled = false,
@@ -50,9 +44,7 @@ export default function PrescriptionItemRow({
 
   const quantity = useMemo(() => {
     if (!dosage || !frequency) return 0;
-    const units = parseInt(dosage.match(/\d+/)?.[0] || "1");
-    const timesPerDay = parseFrequency(frequency);
-    return units * timesPerDay * duration;
+    return calculateQuantity(dosage, frequency, duration);
   }, [dosage, frequency, duration]);
 
   const isStockSufficient = quantity <= (medicine.quantity || 0);
