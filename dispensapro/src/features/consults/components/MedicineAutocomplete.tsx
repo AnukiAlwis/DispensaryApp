@@ -20,7 +20,7 @@ export default function MedicineAutocomplete({
     const fetchMedicines = async () => {
       setLoading(true);
       try {
-        const data = await medicineService.getAll();
+        const data = await medicineService.getAll({ stockStatus: "IN_STOCK,REORDER_NEEDED" });
         setMedicines(data || []);
       } catch (err: any) {
         console.error("Failed to fetch medicines:", err);

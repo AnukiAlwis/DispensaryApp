@@ -47,7 +47,7 @@ const validationSchema = Yup.object({
     .required("Quantity is required"),
   reorderLevel: Yup.number()
     .typeError("Reorder level must be a number")
-    .min(0, "Reorder level cannot be negative")
+    .min(1, "Reorder level must be at least 1")
     .required("Reorder level is required"),
 });
 

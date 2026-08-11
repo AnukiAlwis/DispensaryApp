@@ -1,5 +1,5 @@
-import React, { useState, useMemo } from "react";
-import { Box, Typography, Button, TextField } from "@mui/material";
+import React, { useState, useMemo, useEffect } from "react";
+import { Box, Typography, Button, TextField, FormControl, InputLabel, Select, MenuItem, Checkbox, ListItemText } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import ElevatedCard from "../../../components/ElevatedCard";
 import DataTable, { Column, CustomAction } from "../../../components/DataTable";
@@ -44,12 +44,24 @@ const MEDICINE_COLUMNS: Column[] = [
   // No action columns
 ];
 
+const STOCK_STATUS_OPTIONS = [
+  "IN_STOCK",
+  "REORDER_NEEDED",
+  "UNAVAILABLE"
+] as const;
+
 export default function MedicinePage() {
   const { medicines, addMedicine, fetchMedicines, loading, error } =
     useMedicine();
   const canManagePharmacy = useHasPermission("PHARMACY_MANAGE");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [stockFilter, setStockFilter] = useState<string[]>([...STOCK_STATUS_OPTIONS]);
+
+  useEffect(() => {
+    const stockStatus = stockFilter.join(",");
+    fetchMedicines({ stockStatus });
+  }, [stockFilter]);
 
   const handleCreateMedicine = async (values: MedicineFormValues) => {
     const newMedicine: Omit<Medicine, "id"> = {
@@ -105,7 +117,30 @@ export default function MedicinePage() {
 
       {/* Medicine List Table */}
       <ElevatedCard>
-        <Box display="flex" justifyContent="flex-end" mb={2}>
+        <Box display="flex" justifyContent="space-between" alignItems="center" mb={2} gap={2}>
+          <FormControl sx={{ minWidth: 200 }}>
+            <InputLabel>Stock Status</InputLabel>
+            <Select
+              multiple
+              label="Stock Status"
+              value={stockFilter}
+              onChange={(e) => {
+                const value = e.target.value as string[];
+                // Prevent deselecting the last checkbox
+                if (value.length > 0) {
+                  setStockFilter(value);
+                }
+              }}
+              renderValue={(selected) => selected.join(", ")}
+            >
+              {STOCK_STATUS_OPTIONS.map((status) => (
+                <MenuItem key={status} value={status}>
+                  <Checkbox checked={stockFilter.indexOf(status) > -1} />
+                  <ListItemText primary={status.replace("_", " ")} />
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
           <TextField
             label="Search Medicines"
             variant="outlined"

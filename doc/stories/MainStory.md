@@ -236,8 +236,8 @@ The Doctor Dispensary Application is a comprehensive clinical management system 
 ### Pharmacy Inventory Stories
 
 #### Story 13: Medicine Management
-**As a** Pharmacist  
-**I want to** add new medicines to inventory with pricing and reorder levels  
+**As a** Pharmacist
+**I want to** add new medicines to inventory with pricing and reorder levels
 **So that** medicines can be prescribed and stock levels are maintained
 
 **Acceptance Criteria:**
@@ -246,6 +246,14 @@ The Doctor Dispensary Application is a comprehensive clinical management system 
 - Can update medicine information
 - Can search medicines by various criteria
 - Can view current stock levels
+- Reorder level must be at least 1 (cannot be 0 or negative)
+- System excludes inactive medicines (isActive=false) from all listings
+
+**Stock Status Definitions:**
+- **ALL**: View all medicines
+- **REORDER_NEEDED**: Quantity is less than or equal to reorder level (needs reorder)
+- **UNAVAILABLE**: Quantity equals zero (out of stock)
+- **IN_STOCK**: Quantity is greater than reorder level (available)
 
 **Implementation Status:** ✅ **COMPLETED** (Frontend + Backend)
 

@@ -2,6 +2,7 @@ package com.anucode.dispensary.services.serviceImpl;
 
 import com.anucode.dispensary.dtos.MedicineRequestDto;
 import com.anucode.dispensary.dtos.MedicineResponseDto;
+import com.anucode.dispensary.dtos.StockStatus;
 import com.anucode.dispensary.entities.Medicine;
 import com.anucode.dispensary.entities.Tenant;
 import com.anucode.dispensary.entities.User;
@@ -54,10 +55,40 @@ public class MedicineServiceImpl implements MedicineService {
     }
 
     @Override
-    public List<MedicineResponseDto> listMedicines(UUID tenantId) {
+    public List<MedicineResponseDto> listMedicines(UUID tenantId, List<StockStatus> stockStatuses) {
         List<Medicine> medicines = medicineRepository.findByTenantId(tenantId);
+        
         return medicines.stream()
+                .filter(m -> m.getIsActive() != null && m.getIsActive())
+                .filter(m -> matchesStockStatus(m, stockStatuses))
                 .map(m -> modelMapper.map(m, MedicineResponseDto.class))
                 .collect(Collectors.toList());
+    }
+
+    private boolean matchesStockStatus(Medicine medicine, List<StockStatus> stockStatuses) {
+        if (stockStatuses.contains(StockStatus.ALL)) {
+            return true;
+        }
+
+        int quantity = medicine.getQuantity() != null ? medicine.getQuantity() : 0;
+        int reorderLevel = medicine.getReorderLevel() != null ? medicine.getReorderLevel() : 0;
+
+        for (StockStatus status : stockStatuses) {
+            switch (status) {
+                case UNAVAILABLE:
+                    if (quantity == 0) return true;
+                    break;
+                case REORDER_NEEDED:
+                    if (quantity > 0 && quantity <= reorderLevel) return true;
+                    break;
+                case IN_STOCK:
+                    if (quantity > reorderLevel) return true;
+                    break;
+                case ALL:
+                    return true;
+            }
+        }
+
+        return false;
     }
 }

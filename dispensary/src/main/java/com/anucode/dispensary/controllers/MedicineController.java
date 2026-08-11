@@ -3,6 +3,7 @@ package com.anucode.dispensary.controllers;
 import com.anucode.dispensary.config.TenantContext;
 import com.anucode.dispensary.dtos.MedicineRequestDto;
 import com.anucode.dispensary.dtos.MedicineResponseDto;
+import com.anucode.dispensary.dtos.StockStatus;
 import com.anucode.dispensary.security.Permissions;
 import com.anucode.dispensary.services.MedicineService;
 import jakarta.validation.Valid;
@@ -41,8 +42,10 @@ public class MedicineController {
 
     @GetMapping
     @PreAuthorize("hasAuthority('" + Permissions.PHARMACY_VIEW + "')")
-    public ResponseEntity<List<MedicineResponseDto>> listMedicines() {
+    public ResponseEntity<List<MedicineResponseDto>> listMedicines(
+            @RequestParam(defaultValue = "ALL") String stockStatus) {
         UUID tenantId = UUID.fromString(TenantContext.getTenantId());
-        return ResponseEntity.ok(medicineService.listMedicines(tenantId));
+        List<StockStatus> stockStatuses = StockStatus.fromString(stockStatus);
+        return ResponseEntity.ok(medicineService.listMedicines(tenantId, stockStatuses));
     }
 }

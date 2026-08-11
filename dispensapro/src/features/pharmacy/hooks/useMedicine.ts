@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { medicineService } from "../services/medicineService";
+import { medicineService, MedicineFilterOptions } from "../services/medicineService";
 import { Medicine } from "../types";
 
 export default function useMedicine() {
@@ -10,11 +10,11 @@ export default function useMedicine() {
   /**
    * Fetches all medicines and updates the state.
    */
-  const fetchMedicines = async () => {
+  const fetchMedicines = async (options?: MedicineFilterOptions) => {
     setLoading(true);
     setError(null);
     try {
-      const data = await medicineService.getAll();
+      const data = await medicineService.getAll(options);
       setMedicines(data);
     } catch (err) {
       setError("Failed to fetch medicines.");

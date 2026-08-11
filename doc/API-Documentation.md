@@ -417,7 +417,19 @@ Location: /medicines/{medicineId}
 ### List Medicines
 **GET** `/medicines`
 
-Retrieves all medicines in the inventory.
+Retrieves all medicines in the inventory. Supports optional stock status filtering.
+
+**Query Parameters:**
+- `stockStatus` (String, optional) - Comma-separated stock status values to filter medicines. Default: "ALL"
+  - Valid values: `ALL`, `IN_STOCK`, `REORDER_NEEDED`, `UNAVAILABLE`
+  - Multiple values: `IN_STOCK,REORDER_NEEDED` (comma-separated)
+  - **Stock Status Definitions:**
+    - `ALL`: View all medicines
+    - `REORDER_NEEDED`: Quantity is less than or equal to reorder level
+    - `UNAVAILABLE`: Quantity equals zero
+    - `IN_STOCK`: Quantity is greater than reorder level
+
+**Note:** The endpoint always excludes medicines with `isActive=false` from the response, regardless of the stockStatus filter.
 
 **Response:**
 ```json
@@ -439,6 +451,7 @@ Retrieves all medicines in the inventory.
 
 **Status Codes:**
 - `200` - Medicines retrieved successfully
+- `400` - Invalid stockStatus value
 
 ---
 

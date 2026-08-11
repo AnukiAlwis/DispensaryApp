@@ -22,7 +22,8 @@ public class MedicineRequestDto {
     @DecimalMin(value = "0.01", message = "Sell price must be greater than 0")
     private BigDecimal sellPrice;
 
-    @Min(0)
+    @Min(value = 1, message = "Reorder level must be more than 0")
+    @NotNull
     private Integer reorderLevel;
 
     @NotNull
