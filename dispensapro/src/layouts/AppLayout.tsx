@@ -3,12 +3,19 @@ import { Outlet } from "react-router-dom";
 import Sidebar from "./Sidebar";
 import TopSummaryBar from "./TopSummaryBar";
 import TopBar from "./TopBar";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 export default function AppLayout() {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(!isMobile);
+
+  // Keep the sidebar's open state in sync with the breakpoint: a mobile
+  // temporary Drawer defaulting to "open" would lock body scroll (via MUI's
+  // Modal scroll-lock) behind an overlay the user never explicitly opened.
+  useEffect(() => {
+    setSidebarOpen(!isMobile);
+  }, [isMobile]);
 
   return (
     <Box display="flex" minHeight="100vh" sx={{ overflowX: "hidden" }}>
