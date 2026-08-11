@@ -209,3 +209,93 @@ This parsing rule MUST be implemented in the backend sorting logic for `GET /pre
 4. **Doctor Notes Display**: Should doctor notes be truncated if they are very long? (Decision: Yes, truncate with "..." and show full text on hover or click)
 
 5. **Error Handling**: What should happen if the backend is unavailable during preparation? (Decision: Show error message and allow pharmacist to retry or cancel)
+
+---
+
+## Addendum: Dispense Stock Integrity Fix
+
+### Context
+
+The original design (see "Decision: Dispensing is a single backend transaction across all medicines" above) already specified `POST /prescriptions/{id}/complete-dispense` as the correct approach and explicitly rejected looping `POST /dispense` from the frontend. However, task 1.5 in `tasks.md` was implemented as "reuse `PUT /prescriptions/{id}/status`" instead, and the endpoint was never built. Verified in the current codebase:
+
+- `MedicinePreparationModal.handleDispense` (`dispensapro/src/features/dispensing/components/MedicinePreparationModal.tsx`) calls only `dispensingService.updatePrescriptionStatus(prescriptionId, "DISPENSED")`.
+- No caller anywhere in `dispensapro/src` invokes `POST /dispense`.
+- `DispenseController`/`DispenseServiceImpl`/`DispenseRequestDto` (backend) are fully implemented but orphaned — dead code from this workflow's perspective.
+- `BillServiceImpl.createOrRefreshLineItemsFromDispense` always finds zero `Dispense` rows for the prescription and falls back to `PrescriptionItem.qtyPrescribed`.
+
+This addendum closes that gap.
+
+### Learnings From the Existing `POST /dispense` API (to be copied, then deleted)
+
+`DispenseServiceImpl.recordDispense` already encodes the correct business rules for a single dispense line. These rules are **copied into the new batch endpoint** before the old endpoint is deleted. Specific insights to carry over:
+
+1. **Validation order/rules to preserve**: prescription-item exists → its prescription belongs to tenant → prescription `status == ISSUED` → medicine exists & belongs to tenant → `medicine.isActive` → stock check (`medicine.quantity >= qtyDispensed`) → dispensing user exists.
+2. **`medicineId` in the request is redundant and removable.** The existing `DispenseRequestDto` takes both `prescriptionItemId` and `medicineId` and then validates `pItem.getMedicine().getId().equals(medicine.getId())` purely to catch client-side mismatches. Since `PrescriptionItem.medicine` is already the source of truth, the new batch DTO **omits `medicineId` entirely** and derives `Medicine` via `prescriptionItem.getMedicine()` — this removes an entire class of validation (and possible client bugs) rather than inheriting it.
+3. **Known pre-existing bug to fix**: `DispenseRequestDto.note` is accepted by the API but never persisted (no `note` column on `Dispense`). Added as a nullable `String` column on `Dispense` to complete the audit trail.
+4. **Error shape to reuse**: `GlobalExceptionHandler.handleInsufficientStock` already returns `{"error": "..."}` with `400`. The batch endpoint reuses the same exception type and handler — only the *message* needs to aggregate multiple shortfalls instead of stopping at the first.
+
+### API Design
+
+**New endpoint**: `POST /prescriptions/{id}/complete-dispense`
+
+Request body — one entry per prescription item being dispensed (no `medicineId` — derived from the `PrescriptionItem`; `qtyDispensed` defaults to `qtyPrescribed` on the frontend if the pharmacist didn't adjust it; `note` optional):
+
+```json
+{
+  "items": [
+    { "prescriptionItemId": "uuid", "qtyDispensed": 30, "note": null },
+    { "prescriptionItemId": "uuid", "qtyDispensed": 10, "note": null }
+  ]
+}
+```
+
+Response: `PrescriptionResponseDto` (existing shape) reflecting the new `DISPENSED` status, so the frontend does not need a separate re-fetch.
+
+New DTOs:
+- `CompleteDispenseRequestDto { List<CompleteDispenseItemDto> items }`
+- `CompleteDispenseItemDto { UUID prescriptionItemId; Integer qtyDispensed; String note }`
+
+Error responses:
+- `400` `InsufficientStockException` — message aggregates **all** shortfalls in one response (not just the first), e.g. `"Insufficient stock for: Paracetamol 500mg (required 30, available 21); Amoxicillin 250mg (required 20, available 0)"`, so the pharmacist sees every problem at once instead of one at a time.
+- `400` `InvalidPrescriptionStateException` if prescription is not `ISSUED`.
+
+**Permission**: `PRESCRIPTION_DISPENSE`, enforced via `@PreAuthorize` on `PrescriptionController`.
+
+### Backend Implementation Plan
+
+**Step 1 — add `Dispense.note` column**: Add nullable `String note` to `Dispense` entity (Hibernate `ddl-auto` will create it).
+
+**Step 2 — delete the old endpoint** (verified to have no callers): delete `DispenseController`, `DispenseService`/`DispenseServiceImpl`, `DispenseRequestDto`, `DispenseResponseDto`.
+
+**Step 3 — new method** `PrescriptionService.completeDispense(UUID tenantId, UUID currentUserId, UUID prescriptionId, CompleteDispenseRequestDto request)`, implemented in `PrescriptionServiceImpl`, `@Transactional`. Logic (copied from the deleted `recordDispense`, adapted for batch):
+
+1. Load `Prescription`, verify tenant match and `status == ISSUED`.
+2. Load all `PrescriptionItem`s for the prescription; validate every `prescriptionItemId` in the request belongs to this prescription.
+3. **Validation pass (no writes yet)**: for each item:
+   - Resolve its `Medicine` via `prescriptionItem.getMedicine()`.
+   - Check `medicine.isActive`.
+   - Check `medicine.quantity >= qtyDispensed`.
+   - Check `medicine.tenant == tenant`.
+   Collect all shortfalls into a list; if non-empty, throw one aggregated `InsufficientStockException` (e.g. semicolon-joined `"{medicineName} (required X, available Y)"` entries) — nothing is written.
+4. **Write pass** (only if step 3 produced zero shortfalls): for each item:
+   - Create a `Dispense` row (`tenant`, `prescriptionItem`, `medicine`, `qtyDispensed`, `note`, `dispensedAt=now`, `dispensedBy=currentUser`).
+   - Decrement `medicine.quantity -= qtyDispensed`.
+   - Save both.
+5. Transition `prescription.status = DISPENSED` (reuse existing transition rule in `updatePrescriptionStatus`: `ISSUED → DISPENSED` allowed).
+6. Return the updated `PrescriptionResponseDto`.
+
+The **validation-then-write two-pass structure** is critical so a mid-loop failure never leaves partial `Dispense` rows or partial stock decrements — this is the property that calling `POST /dispense` N times from the frontend could never guarantee, and is the reason this needs to be one new endpoint.
+
+### Frontend Implementation Plan
+
+- `dispensingService.completeDispense(prescriptionId, items)`: `POST /prescriptions/{id}/complete-dispense` with `{ items: [{ prescriptionItemId, qtyDispensed }] }`, built from the current `DispensingMedicine[]` state (`id` → `prescriptionItemId`, `quantity` → `qtyDispensed`, since the preparation UI does not currently support editing quantity — the prescribed quantity is what's sent, preserving current behavior while establishing the audit trail).
+- `MedicinePreparationModal.handleDispense` replaces the `updatePrescriptionStatus` call with `dispensingService.completeDispense(prescriptionId, medicines)`.
+- Error handling: parse the `InsufficientStockException` message from the `400` response body (`error.error` per `GlobalExceptionHandler.handleInsufficientStock`) and render it in the existing `<Alert severity="error">` in the modal — this makes the currently-dead error branch in `handleDispense` (which already expects an `"Insufficient stock"` substring) actually reachable.
+- No sessionStorage schema changes needed; `medicineStatuses` cycling logic is unchanged — only the final DISPENSE action's network call changes.
+
+### Migration / Compatibility
+
+- Additive at the API level: existing `PUT /prescriptions/{id}/status`, `POST /dispense`, and `GET /dispense/{id}` endpoint contracts are untouched (request/response shapes unchanged) and remain valid for other flows/tests.
+- **One schema addition**: `Dispense.note` column (nullable `VARCHAR`) — auto-created by Hibernate `ddl-auto`, no manual migration needed, and backward-compatible (existing rows get `NULL`).
+- The `DispenseServiceImpl` refactor (Step 1 above) changes internal method structure only — `recordDispense`'s external behavior/contract for `POST /dispense` is unchanged, verified by existing tests continuing to pass.
+- Once deployed, any prescriptions already marked `DISPENSED` under the old (buggy) code path have no retroactive `Dispense` rows or stock corrections — this is a data-quality gap accepted as out of scope for this fix (historical inventory reconciliation, if needed, is a separate manual/ops task).
