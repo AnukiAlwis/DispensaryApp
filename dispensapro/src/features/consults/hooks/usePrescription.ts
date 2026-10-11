@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { prescriptionService } from "../services/prescriptionService";
 import { PrescriptionItem, PrescriptionItemRequestDto } from "../types";
+import { calculateQuantity as calculateQuantityUtil } from "../utils/frequency";
 
 interface UsePrescriptionResult {
   items: PrescriptionItem[];
@@ -17,14 +18,6 @@ interface UsePrescriptionResult {
     duration: number
   ) => number;
 }
-
-const parseFrequency = (freq: string): number => {
-  const lower = freq.toLowerCase();
-  if (lower.includes("after meals") || lower.includes("before meals"))
-    return 3;
-  if (lower.includes("twice daily") || lower.includes("2 times")) return 2;
-  return 1;
-};
 
 export const usePrescription = (): UsePrescriptionResult => {
   const [items, setItems] = useState<PrescriptionItem[]>([]);
@@ -65,11 +58,7 @@ export const usePrescription = (): UsePrescriptionResult => {
     dosage: string,
     frequency: string,
     duration: number
-  ): number => {
-    const units = parseInt(dosage.match(/\d+/)?.[0] || "1");
-    const timesPerDay = parseFrequency(frequency);
-    return units * timesPerDay * duration;
-  };
+  ): number => calculateQuantityUtil(dosage, frequency, duration);
 
   return {
     items,

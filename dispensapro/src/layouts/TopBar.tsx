@@ -41,16 +41,16 @@ export default function TopBar({ isMobile, onToggleSidebar }: TopBarProps) {
         <Toolbar
           sx={{
             minHeight: isMobile ? 64 : 78,
-            px: { xs: 2, md: 4 },
+            px: { xs: 1.5, md: 4 },
             display: "flex",
-            flexDirection: isMobile ? "column" : "row",
-            alignItems: isMobile ? "flex-start" : "center",
+            flexDirection: "row",
+            alignItems: "center",
             justifyContent: "space-between",
-            gap: isMobile ? 1.5 : 0,
+            gap: 1,
           }}
         >
           {/* Left cluster — menu + brand */}
-          <Stack direction="row" alignItems="center" spacing={2}>
+          <Stack direction="row" alignItems="center" spacing={2} sx={{ flexShrink: 0 }}>
             <IconButton
               onClick={onToggleSidebar}
               edge="start"
@@ -72,17 +72,32 @@ export default function TopBar({ isMobile, onToggleSidebar }: TopBarProps) {
           <Stack
             direction="row"
             alignItems="center"
-            spacing={isMobile ? 1 : 2}
+            spacing={{ xs: 0.75, sm: 1, md: 2 }}
+            sx={{ minWidth: 0 }}
           >
-            
+            <Divider
+              flexItem
+              orientation="vertical"
+              sx={{
+                mx: 0.5,
+                borderColor: "rgba(255, 255, 255, 0.2)",
+                display: { xs: "none", sm: "block" },
+              }}
+            />
 
-            <Divider flexItem orientation="vertical" sx={{ mx: 0.5, borderColor: "rgba(255, 255, 255, 0.2)" }} />
-
-            <Stack spacing={0} sx={{ textAlign: "right" }}>
-              <Typography variant="body2" sx={{ fontWeight: 600, color: "white" }}>
+            <Stack spacing={0} sx={{ textAlign: "right", minWidth: 0 }}>
+              <Typography
+                variant="body2"
+                noWrap
+                sx={{ fontWeight: 600, color: "white", maxWidth: { xs: 90, sm: 160 } }}
+              >
                 {user?.fullName || 'User'}
               </Typography>
-              <Typography variant="caption" sx={{ color: "rgba(255, 255, 255, 0.7)" }}>
+              <Typography
+                variant="caption"
+                noWrap
+                sx={{ color: "rgba(255, 255, 255, 0.7)", display: "block" }}
+              >
                 {user?.displayPosition || 'No position'}
               </Typography>
             </Stack>
@@ -91,9 +106,10 @@ export default function TopBar({ isMobile, onToggleSidebar }: TopBarProps) {
               src="/avatar.png"
               alt="User Avatar"
               sx={{
-                width: 40,
-                height: 40,
+                width: { xs: 34, sm: 40 },
+                height: { xs: 34, sm: 40 },
                 border: "2px solid rgba(255, 255, 255, 0.3)",
+                flexShrink: 0,
               }}
             />
 
@@ -103,9 +119,10 @@ export default function TopBar({ isMobile, onToggleSidebar }: TopBarProps) {
                 borderRadius: 100,
                 bgcolor: "rgba(255, 255, 255, 0.15)",
                 color: "white",
-                width: 44,
-                height: 44,
+                width: { xs: 36, sm: 44 },
+                height: { xs: 36, sm: 44 },
                 border: "1px solid rgba(255, 255, 255, 0.3)",
+                flexShrink: 0,
                 "&:hover": {
                   bgcolor: "rgba(255, 255, 255, 0.25)",
                 },

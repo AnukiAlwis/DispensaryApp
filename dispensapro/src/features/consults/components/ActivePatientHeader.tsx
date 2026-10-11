@@ -46,25 +46,32 @@ export default function ActivePatientHeader({
             {`${patient.firstName.charAt(0)}${patient.lastName.charAt(0)}`.toUpperCase()}
           </Avatar>
           <Box sx={{ minWidth: 0 }}>
-            <Typography 
-              variant="h6" 
-              sx={{ 
-                color:"white"
-              }}
-            >
-              You are currently consulting  :   {patient.firstName} {patient.lastName}
-            </Typography>
-            <Typography 
-              variant="h6" 
+            <Typography
+              variant="caption"
               component="div"
-              sx={{ 
-                fontWeight: 600, 
-                fontSize: "1.05rem",
+              sx={{
+                color: "rgba(255, 255, 255, 0.75)",
+                textTransform: "uppercase",
+                letterSpacing: 0.5,
+                fontSize: { xs: "0.65rem", sm: "0.7rem", lg:"1.15rem" },
+                fontWeight: 500,
                 lineHeight: 1.3,
-                mb: 0.25,
               }}
             >
-              
+              You are currently consulting
+            </Typography>
+            <Typography
+              variant="h6"
+              component="div"
+              sx={{
+                color: "white",
+                fontWeight: 600,
+                fontSize: { xs: "1rem", sm: "1.15rem" },
+                lineHeight: 1.3,
+                wordBreak: "break-word",
+              }}
+            >
+              {patient.firstName} {patient.lastName}
             </Typography>
             <Typography 
               variant="caption" 
@@ -73,11 +80,12 @@ export default function ActivePatientHeader({
                 opacity: 0.85,
                 fontSize: "0.75rem",
                 lineHeight: 1.3,
+                mt: 0.25,
               }}
             >
-              {patient.age ? `Age: ${patient.age}` : "Age: N/A"}	
-              {patient.gender && ` |  Gender: ${patient.gender}`}	
-              {bookingDateTime && ` |  Booking: ${new Date(bookingDateTime).toLocaleString()}`}	
+              {patient.age ? `Age: ${patient.age}` : "Age: N/A"}
+              {patient.gender && ` | Gender: ${patient.gender}`}
+              {bookingDateTime && ` | Booking: ${new Date(bookingDateTime).toLocaleString()}`}
             </Typography>
           </Box>
         </Box>

@@ -34,6 +34,27 @@ The current dispensing workflow lacks structure and guidance, leading to potenti
 
 ---
 
+## Addendum: Backend-Driven Recovery for Dropped Tabs
+
+### Why
+
+Pharmacists may close the browser tab during the dispense + billing workflow. The page must allow them to see incomplete flows (for example, a prescription that has been dispensed but not yet paid) and continue the workflow to completion without relying on browser storage.
+
+### What Changes
+
+- **Remove localStorage/sessionStorage cross-tab recovery plan**: mid-preparation recovery is not implemented.
+- **Backend recovery source**: add `GET /prescriptions/billing-pending` to return prescriptions whose `Prescription.status = DISPENSED` and whose associated `Bill.status = DUE`.
+- **Frontend "Billing Pending" section**: on `PrescriptionDispensingPage`, display a list of billing-pending prescriptions with a "Complete Billing" action that opens `BillingModal` directly for the selected prescription.
+- **Single-session enforcement remains frontend-only**: `sessionStorage` still disables "Dispense Now" buttons while an in-tab preparation is open, but it is **not** relied upon for cross-tab recovery.
+
+### Impact
+
+- **Backend**: one new repository query, one service method, and one controller endpoint. No new entities or schema changes.
+- **Frontend**: add `getBillingPending()` to `dispensingService`, add `BillingPendingPrescription` type, add a new "Billing Pending" card/section to `PrescriptionDispensingPage`, and wire it to open `BillingModal` directly.
+- **Database**: no changes; uses existing `prescription.status`, `bill.status`, and the existing `bill.prescription_id` relationship.
+
+---
+
 ## Addendum: Dispense Stock Integrity Fix (Post-Implementation Gap)
 
 ### Why

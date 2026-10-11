@@ -92,6 +92,13 @@ public class PrescriptionController {
         return ResponseEntity.ok(prescriptionService.getUpNext(tenantId));
     }
 
+    @GetMapping("/billing-pending")
+    @PreAuthorize("hasAuthority('" + Permissions.QUEUE_VIEW + "') or hasAuthority('" + Permissions.PHARMACY_MANAGE + "')")
+    public ResponseEntity<List<CurrentServingPrescriptionDto>> getBillingPending() {
+        UUID tenantId = UUID.fromString(TenantContext.getTenantId());
+        return ResponseEntity.ok(prescriptionService.getBillingPending(tenantId));
+    }
+
     @GetMapping("/{id}/medicines")
     @PreAuthorize("hasAuthority('" + Permissions.PRESCRIPTION_VIEW + "')")
     public ResponseEntity<List<PrescriptionMedicineDto>> getPrescriptionMedicines(@PathVariable UUID id) {

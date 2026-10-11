@@ -9,6 +9,7 @@ import { getTenantCode } from '../utils/tenant';
 import { setTokens } from '../utils/auth';
 import { setUserDetails } from '../store/userSlice';
 import { setCredentials } from '../store/authSlice';
+import { summaryService } from '../services/summaryService';
 
 const LoginPage: React.FC = () => {
   const navigate = useNavigate();
@@ -52,6 +53,9 @@ const LoginPage: React.FC = () => {
         updatedAt: response.user.updatedAt,
       }));
       
+      // Fetch today's summary immediately on login
+      summaryService.getTodaySummary();
+
       // Redirect to dashboard
       navigate('/');
     } catch (err: any) {

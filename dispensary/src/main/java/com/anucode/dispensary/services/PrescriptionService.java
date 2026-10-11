@@ -24,6 +24,8 @@ public interface PrescriptionService {
 
     List<CurrentServingPrescriptionDto> getUpNext(UUID tenantId);
 
+    List<CurrentServingPrescriptionDto> getBillingPending(UUID tenantId);
+
     List<PrescriptionMedicineDto> getPrescriptionMedicines(UUID tenantId, UUID prescriptionId);
 
     PrescriptionResponseDto completeDispense(UUID tenantId, UUID currentUserId, UUID prescriptionId, CompleteDispenseRequestDto request);

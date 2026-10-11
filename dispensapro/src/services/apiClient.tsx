@@ -20,7 +20,7 @@ const apiClient = axios.create({
 // Request interceptor
 apiClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
-    config.headers = config.headers ?? {};
+    config.headers = (config.headers ?? {}) as InternalAxiosRequestConfig["headers"];
 
     // Keep X-Tenant-ID for developer visibility (informational only)
     config.headers["X-Tenant-ID"] = "1f50d50d-f586-40ba-bba4-ca8e54624d37";

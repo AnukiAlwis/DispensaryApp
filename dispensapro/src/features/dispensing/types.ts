@@ -15,6 +15,14 @@ export interface UpNextPrescription {
   issuedAt: string;
 }
 
+export interface BillingPendingPrescription {
+  id: string;
+  patientName: string;
+  patientPhone: string;
+  doctorName: string;
+  issuedAt: string;
+}
+
 export type MedicineStatus = "NOT_STARTED" | "STARTED" | "READY_TO_DISPENSE";
 
 export interface DispensingMedicine {

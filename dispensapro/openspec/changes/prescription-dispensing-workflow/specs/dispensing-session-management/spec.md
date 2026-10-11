@@ -36,3 +36,23 @@ The system SHALL allow manual patient selection only before preparation has star
 - **WHEN** an active dispensing session exists
 - **THEN** all Dispense Now buttons are disabled
 - **AND** manual patient selection is not allowed
+
+---
+
+## ADDED Requirements: Backend-Driven Recovery for Dropped Tabs
+
+### Requirement: Display Billing Pending Prescriptions
+The system SHALL display prescriptions that have been dispensed but not yet paid so a pharmacist can resume billing after closing the tab.
+
+#### Scenario: Display billing pending prescriptions
+- **WHEN** the pharmacist opens the Prescription Dispensing page
+- **THEN** the system queries the backend for prescriptions with `status = DISPENSED` and an associated Bill with `status = DUE`
+- **AND** displays them in a "Billing Pending" section
+
+### Requirement: Resume Billing for a Pending Prescription
+The system SHALL allow the pharmacist to open the Billing modal directly from a billing-pending prescription.
+
+#### Scenario: Resume billing for a pending prescription
+- **WHEN** the pharmacist selects "Complete Billing" for a billing-pending prescription
+- **THEN** the Billing modal opens directly for that prescription
+- **AND** the pharmacist can finish payment normally

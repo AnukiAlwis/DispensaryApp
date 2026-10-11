@@ -161,11 +161,6 @@ This parsing rule MUST be implemented in the backend sorting logic for `GET /pre
 
 **Rationale**: The current business requirements don't need complex inventory tracking. Simple quantity validation is sufficient for the pharmacy's needs.
 
-### Risk: No Backend Preparation State
-**Risk**: If the frontend crashes or has a bug, preparation progress cannot be recovered from the backend.
-
-**Mitigation**: The preparation workflow is simple and quick (typically 2-5 minutes). The risk of data loss is minimal and acceptable for the use case.
-
 ## Migration Plan
 
 ### Deployment Steps
@@ -299,3 +294,51 @@ The **validation-then-write two-pass structure** is critical so a mid-loop failu
 - **One schema addition**: `Dispense.note` column (nullable `VARCHAR`) — auto-created by Hibernate `ddl-auto`, no manual migration needed, and backward-compatible (existing rows get `NULL`).
 - The `DispenseServiceImpl` refactor (Step 1 above) changes internal method structure only — `recordDispense`'s external behavior/contract for `POST /dispense` is unchanged, verified by existing tests continuing to pass.
 - Once deployed, any prescriptions already marked `DISPENSED` under the old (buggy) code path have no retroactive `Dispense` rows or stock corrections — this is a data-quality gap accepted as out of scope for this fix (historical inventory reconciliation, if needed, is a separate manual/ops task).
+
+---
+
+## Addendum: Backend-Driven Recovery for Dropped Tabs
+
+### Context
+
+Pharmacists may close the browser tab during the dispense + billing workflow. The system must let them reopen the page, see incomplete flows (specifically prescriptions that have been dispensed but not yet paid), and continue to completion.
+
+### Decision: Recover from backend state, not browser storage
+
+**Decision**: Use existing `Prescription.status` and `Bill.status` as the recovery source. Do **not** extend `sessionStorage`/`localStorage` for cross-tab recovery.
+
+**Rationale**:
+- `Prescription.status = DISPENSED` plus `Bill.status = DUE` already captures a dispensed-but-not-paid prescription
+- Works across tabs, browsers, and devices for the same tenant/user
+- No new entities or schema changes
+- Mid-preparation drops are not recovered: the prescription remains `ISSUED` and reappears in Current Serving / Up Next, so the pharmacist simply restarts preparation. No stock has been decremented yet, so restarting is safe.
+
+### API Design
+
+**New endpoint**: `GET /prescriptions/billing-pending`
+
+Returns a list of prescriptions (same shape as Current Serving / Up Next) where:
+- `p.status = 'DISPENSED'`
+- associated `Bill.status = 'DUE'`
+- scoped to the current tenant
+- ordered by `p.updatedAt ASC` (oldest first)
+
+No new DTO needed; reuse `CurrentServingPrescriptionDto`.
+
+### Frontend Design
+
+On `PrescriptionDispensingPage`:
+1. Fetch `GET /prescriptions/billing-pending` alongside current-serving and up-next on mount.
+2. Render a new **"Billing Pending"** card/table **above** Current Serving only when records exist. Use a **light yellow background** and an **orange "Complete Billing"** action button so it stands out as a recovery queue.
+3. Each row shows Patient Name, Phone, Doctor, Dispensed Date & Time, and the action button.
+4. Clicking "Complete Billing" sets the selected prescription ID and opens `BillingModal` directly (`workflowState = "billing"`).
+5. After DONE / payment complete, refetch the billing-pending list so the row disappears.
+
+`sessionStorage` continues to be used only for in-tab single-session enforcement (disabling "Dispense Now" while a preparation modal is open). It is **not** relied upon for cross-tab recovery.
+
+### Database / Schema
+
+No changes. Uses existing:
+- `prescription.status`
+- `bill.status`
+- `bill.prescription_id` relationship

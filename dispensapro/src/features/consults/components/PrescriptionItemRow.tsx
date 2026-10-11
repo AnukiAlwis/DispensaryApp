@@ -5,10 +5,10 @@ import {
   Autocomplete,
   Button,
   Typography,
-  Grid,
 } from "@mui/material";
 import CheckIcon from "@mui/icons-material/Check";
 import { Medicine } from "../../pharmacy/types";
+import { calculateQuantity } from "../utils/frequency";
 
 const FREQUENCY_OPTIONS = [
   "After meals",
@@ -31,13 +31,6 @@ interface PrescriptionItemRowProps {
   }) => void;
 }
 
-const parseFrequency = (freq: string): number => {
-  const lower = freq.toLowerCase();
-  if (lower.includes("after meals") || lower.includes("before meals")) return 3;
-  if (lower.includes("twice daily") || lower.includes("2 times")) return 2;
-  return 1;
-};
-
 export default function PrescriptionItemRow({
   medicine,
   disabled = false,
@@ -50,9 +43,7 @@ export default function PrescriptionItemRow({
 
   const quantity = useMemo(() => {
     if (!dosage || !frequency) return 0;
-    const units = parseInt(dosage.match(/\d+/)?.[0] || "1");
-    const timesPerDay = parseFrequency(frequency);
-    return units * timesPerDay * duration;
+    return calculateQuantity(dosage, frequency, duration);
   }, [dosage, frequency, duration]);
 
   const isStockSufficient = quantity <= (medicine.quantity || 0);
@@ -65,6 +56,12 @@ export default function PrescriptionItemRow({
       setDuration(1);
     }
   }, [medicine.id]);
+
+  const handleDosageChange = (value: string) => {
+    // Reject input if any number in the dosage has more than 2 decimal places
+    if (/\d+\.\d{3,}/.test(value)) return;
+    setDosage(value);
+  };
 
   const handleConfirm = () => {
     if (!dosage || !frequency || quantity <= 0 || !medicine.id) return;
@@ -90,8 +87,15 @@ export default function PrescriptionItemRow({
         backgroundColor: isCommitted ? "action.hover" : "background.paper",
       }}
     >
-      <Grid container spacing={2} alignItems="center">
-        <Grid size={{ xs: 12, sm: 3 }}>
+      <Box
+        sx={{
+          display: "flex",
+          flexWrap: "wrap",
+          alignItems: "center",
+          gap: 2,
+        }}
+      >
+        <Box sx={{ flex: "2 1 200px", minWidth: 160 }}>
           <TextField
             fullWidth
             label="Medicine"
@@ -99,18 +103,18 @@ export default function PrescriptionItemRow({
             InputProps={{ readOnly: true }}
             disabled={disabled || isCommitted}
           />
-        </Grid>
-        <Grid size={{ xs: 12, sm: 2 }}>
+        </Box>
+        <Box sx={{ flex: "1 1 140px", minWidth: 120 }}>
           <TextField
             fullWidth
             label="Dosage"
             value={dosage}
-            onChange={(e) => setDosage(e.target.value)}
+            onChange={(e) => handleDosageChange(e.target.value)}
             placeholder="e.g. 2 tablets"
             disabled={disabled || isCommitted}
           />
-        </Grid>
-        <Grid size={{ xs: 12, sm: 2 }}>
+        </Box>
+        <Box sx={{ flex: "1 1 160px", minWidth: 140 }}>
           <Autocomplete
             freeSolo
             options={FREQUENCY_OPTIONS}
@@ -122,8 +126,8 @@ export default function PrescriptionItemRow({
               <TextField {...params} label="Frequency" fullWidth />
             )}
           />
-        </Grid>
-        <Grid size={{ xs: 12, sm: 1 }}>
+        </Box>
+        <Box sx={{ flex: "0 1 90px", minWidth: 80 }}>
           <TextField
             fullWidth
             type="number"
@@ -133,24 +137,21 @@ export default function PrescriptionItemRow({
             inputProps={{ min: 1 }}
             disabled={disabled || isCommitted}
           />
-        </Grid>
-        <Grid size={{ xs: 12, sm: "auto" }}>
-          <Typography
-            variant="body1"
-            sx={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              height: "100%",
-              minWidth: 24,
-              color: "text.secondary",
-              fontWeight: 500,
-            }}
-          >
-            =
-          </Typography>
-        </Grid>
-        <Grid size={{ xs: 12, sm: 1 }}>
+        </Box>
+        <Typography
+          variant="body1"
+          sx={{
+            display: { xs: "none", sm: "flex" },
+            alignItems: "center",
+            justifyContent: "center",
+            minWidth: 16,
+            color: "text.secondary",
+            fontWeight: 500,
+          }}
+        >
+          =
+        </Typography>
+        <Box sx={{ flex: "0 1 90px", minWidth: 80 }}>
           <TextField
             fullWidth
             label="Qty"
@@ -158,21 +159,19 @@ export default function PrescriptionItemRow({
             InputProps={{ readOnly: true }}
             disabled
           />
-        </Grid>
-        <Grid size={{ xs: 12, sm: 3 }}>
-          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-            <Button
-              variant="contained"
-              size="small"
-              startIcon={<CheckIcon />}
-              onClick={handleConfirm}
-              disabled={disabled || !dosage || !frequency || !isStockSufficient}
-            >
-              Confirm
-            </Button>
-          </Box>
-        </Grid>
-      </Grid>
+        </Box>
+        <Box sx={{ flex: "1 1 120px", minWidth: 100, display: "flex", alignItems: "center", gap: 1 }}>
+          <Button
+            variant="contained"
+            size="small"
+            startIcon={<CheckIcon />}
+            onClick={handleConfirm}
+            disabled={disabled || !dosage || !frequency || !isStockSufficient}
+          >
+            Confirm
+          </Button>
+        </Box>
+      </Box>
 
       {!isStockSufficient && (
         <Typography color="error" variant="body2" sx={{ mt: 1 }}>
